@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>오늘의 무드</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&family=DM+Serif+Display:ital@0;1&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0c0c0c;
+  --text: #f0ece4;
+  --muted: #6b6560;
+  --card-r: 22px;
+}
+
+html, body {
+  height: 100%; background: var(--bg); color: var(--text);
+  font-family: 'Noto Serif KR', serif; overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── SCREENS ── */
+.screen {
+  position: fixed; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  transition: opacity .55s ease, transform .55s ease;
+}
+.screen.hidden { opacity: 0; pointer-events: none; transform: translateY(22px); }
+
+/* ─────────────────────── INTRO ─────────────────────── */
+#intro { gap: 10px; padding: 36px 24px 40px; }
+
+.eyebrow {
+  font-family: 'Instrument Serif', serif; font-style: italic;
+  font-size: 12px; letter-spacing: 3.5px; color: var(--muted);
+  text-transform: uppercase;
+  animation: up .6s .0s both;
+}
+.main-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(28px, 7.5vw, 48px);
+  font-weight: 400; line-height: 1.15; text-align: center;
+  margin: 6px 0 4px;
+  animation: up .6s .08s both;
+}
+.sub-title {
+  font-size: 12.5px; color: var(--muted); text-align: center;
+  margin-bottom: 32px; font-weight: 300;
+  animation: up .6s .16s both;
+}
+
+/* mood grid */
+.mood-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 11px; width: 100%; max-width: 356px;
+}
+.mood-card {
+  aspect-ratio: 1; border-radius: var(--card-r);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: flex-end;
+  padding: 13px 10px; cursor: pointer; overflow: hidden;
+  position: relative; transition: transform .22s ease;
+  -webkit-tap-highlight-color: transparent;
+  animation: up .5s both; opacity: 0;
+}
+.mood-card:nth-child(1){animation-delay:.06s}
+.mood-card:nth-child(2){animation-delay:.11s}
+.mood-card:nth-child(3){animation-delay:.16s}
+.mood-card:nth-child(4){animation-delay:.21s}
+.mood-card:nth-child(5){animation-delay:.26s}
+.mood-card:nth-child(6){animation-delay:.31s}
+
+.mood-card::after {
+  content: ''; position: absolute; inset: 0;
+  background: rgba(0,0,0,0); transition: background .2s;
+}
+.mood-card:active { transform: scale(0.91); }
+.mood-card:active::after { background: rgba(0,0,0,.15); }
+
+.mood-card .ico  { font-size: 26px; margin-bottom: 5px; position: relative; z-index:1; }
+.mood-card .lbl  { font-size: 13px; font-weight: 600; color: rgba(255,255,255,.94); position: relative; z-index:1; text-shadow: 0 1px 6px rgba(0,0,0,.5); }
+.mood-card .slbl { font-size: 10px; color: rgba(255,255,255,.5); position: relative; z-index:1; margin-top: 2px; font-weight: 300; }
+
+.c-calm       { background: linear-gradient(148deg,#152e3a,#1e6480); }
+.c-happy      { background: linear-gradient(148deg,#4a2f00,#bf7030); }
+.c-melancholy { background: linear-gradient(148deg,#211538,#5c3d7a); }
+.c-focus      { background: linear-gradient(148deg,#142014,#2e6b3c); }
+.c-romantic   { background: linear-gradient(148deg,#330f1e,#873a5a); }
+.c-energy     { background: linear-gradient(148deg,#2e2200,#a8820a); }
+
+/* ─────────────────────── PLAYER ─────────────────────── */
+#player { padding: 0 24px 20px; justify-content: flex-start; overflow-y: auto; }
+
+.player-glow {
+  position: fixed; inset: 0; z-index: 0;
+  opacity: .15; transition: background 1.4s ease; filter: blur(80px);
+  pointer-events: none;
+}
+
+.player-inner {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column;
+  align-items: center; width: 100%; max-width: 360px;
+  padding-top: env(safe-area-inset-top, 16px);
+  padding-top: max(env(safe-area-inset-top, 16px), 16px);
+}
+
+/* top bar */
+.topbar {
+  width: 100%; display: flex;
+  align-items: center; justify-content: space-between;
+  margin-bottom: 22px; padding-top: 10px;
+}
+.back-btn {
+  background: none; border: none; color: var(--muted);
+  font-family: 'Noto Serif KR', serif; font-size: 12.5px;
+  cursor: pointer; letter-spacing: .8px; transition: color .2s;
+  padding: 6px 0;
+}
+.back-btn:hover { color: var(--text); }
+.shuffle-pill {
+  font-size: 11px; color: var(--muted); letter-spacing: .8px;
+  display: flex; align-items: center; gap: 5px;
+}
+
+/* mood label */
+.mood-label {
+  font-family: 'Instrument Serif', serif; font-style: italic;
+  font-size: 11.5px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 4px; align-self: flex-start;
+}
+.mood-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(34px,10vw,52px); font-weight: 400;
+  align-self: flex-start; margin-bottom: 24px;
+  line-height: 1;
+}
+
+/* ── YouTube container ── */
+#yt-wrap { width: 100%; border-radius: 16px; overflow: hidden; margin-bottom: 18px; background: #111; aspect-ratio: 16/9; }
+#yt-wrap iframe { width: 100%; height: 100%; display: block; border: none; }
+
+/* track info row */
+.track-row {
+  width: 100%; display: flex;
+  align-items: center; justify-content: space-between;
+  margin-bottom: 20px; gap: 12px;
+}
+.track-text { flex: 1; min-width: 0; }
+.track-name {
+  font-size: 15.5px; font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.track-artist { font-size: 12.5px; color: var(--muted); margin-top: 3px; font-weight: 300; }
+
+/* save buttons */
+.save-btns { display: flex; gap: 8px; flex-shrink: 0; }
+.save-btn {
+  display: flex; align-items: center; gap: 5px;
+  padding: 7px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.04); text-decoration: none;
+  color: var(--muted); font-size: 11px; font-family: 'Noto Serif KR',serif;
+  transition: color .2s, border-color .2s, background .2s;
+  white-space: nowrap;
+}
+.save-btn:hover { color: var(--text); border-color: rgba(255,255,255,.3); background: rgba(255,255,255,.08); }
+.save-btn svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+/* ── controls ── */
+.controls {
+  width: 100%; display: flex;
+  align-items: center; justify-content: center;
+  gap: 32px; margin-bottom: 28px;
+}
+.ctrl {
+  background: none; border: none; color: var(--muted);
+  cursor: pointer; padding: 8px; font-size: 22px;
+  transition: color .2s, transform .15s;
+}
+.ctrl:hover { color: var(--text); transform: scale(1.1); }
+.ctrl:active { transform: scale(.93); }
+.ctrl-play {
+  width: 60px; height: 60px; border-radius: 50%;
+  background: var(--text); color: var(--bg);
+  border: none; cursor: pointer; font-size: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform .15s, box-shadow .2s;
+  box-shadow: 0 0 32px rgba(240,236,228,.18);
+}
+.ctrl-play:hover { transform: scale(1.06); box-shadow: 0 0 42px rgba(240,236,228,.28); }
+.ctrl-play:active { transform: scale(.96); }
+.ctrl-play svg { width: 22px; height: 22px; fill: var(--bg); }
+
+/* playlist hint */
+.playlist-wrap {
+  width: 100%; text-align: center;
+}
+.playlist-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 12px; color: var(--muted); letter-spacing: .8px;
+  text-decoration: none; border: 1px solid rgba(255,255,255,.1);
+  border-radius: 20px; padding: 8px 18px;
+  transition: color .2s, border-color .2s;
+}
+.playlist-btn:hover { color: var(--text); border-color: rgba(255,255,255,.3); }
+
+/* ── ANIMATIONS ── */
+@keyframes up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* grain */
+body::after {
+  content: ''; position: fixed; inset: 0; pointer-events: none;
+  opacity: .03; z-index: 9999;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ INTRO ═══════════════ -->
+<div class="screen" id="intro">
+  <p class="eyebrow">NFC mood player</p>
+  <h1 class="main-title">오늘의 나는<br>어떤 기분인가요</h1>
+  <p class="sub-title">무드를 선택하면 음악이 시작됩니다</p>
+  <div class="mood-grid">
+    <div class="mood-card c-calm"       onclick="pick('calm')">      <span class="ico">🌊</span><span class="lbl">고요</span><span class="slbl">calm</span></div>
+    <div class="mood-card c-happy"      onclick="pick('happy')">     <span class="ico">☀️</span><span class="lbl">설렘</span><span class="slbl">joyful</span></div>
+    <div class="mood-card c-melancholy" onclick="pick('melancholy')"><span class="ico">🌙</span><span class="lbl">감성</span><span class="slbl">melancholy</span></div>
+    <div class="mood-card c-focus"      onclick="pick('focus')">     <span class="ico">🌿</span><span class="lbl">집중</span><span class="slbl">focus</span></div>
+    <div class="mood-card c-romantic"   onclick="pick('romantic')">  <span class="ico">🌹</span><span class="lbl">낭만</span><span class="slbl">romantic</span></div>
+    <div class="mood-card c-energy"     onclick="pick('energy')">    <span class="ico">⚡</span><span class="lbl">에너지</span><span class="slbl">energetic</span></div>
+  </div>
+</div>
+
+<!-- ═══════════════ PLAYER ═══════════════ -->
+<div class="screen hidden" id="player">
+  <div class="player-glow" id="glow"></div>
+  <div class="player-inner">
+
+    <div class="topbar">
+      <button class="back-btn" onclick="goBack()">← 무드 다시 선택</button>
+      <div class="shuffle-pill">🔀 셔플</div>
+    </div>
+
+    <p class="mood-label">NOW PLAYING FOR</p>
+    <h2 class="mood-title" id="moodTitle">고요</h2>
+
+    <!-- YouTube 영상 -->
+    <div id="yt-wrap">
+      <div id="yt-player"></div>
+    </div>
+
+    <!-- 곡 정보 + 저장 버튼 -->
+    <div class="track-row">
+      <div class="track-text">
+        <p class="track-name"   id="tName">—</p>
+        <p class="track-artist" id="tArtist">—</p>
+      </div>
+      <div class="save-btns">
+        <!-- YouTube 저장 -->
+        <a class="save-btn" id="btnYT" href="#" target="_blank" title="YouTube에서 저장">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22.54 6.42A2.78 2.78 0 0020.7 4.6C19.07 4 12 4 12 4s-7.07 0-8.7.6A2.78 2.78 0 001.46 6.42 29.94 29.94 0 001 12a29.94 29.94 0 00.46 5.58A2.78 2.78 0 003.3 19.4C4.93 20 12 20 12 20s7.07 0 8.7-.6a2.78 2.78 0 001.84-1.82A29.94 29.94 0 0023 12a29.94 29.94 0 00-.46-5.58z"/>
+            <polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="currentColor" stroke="none"/>
+          </svg>
+          YT
+        </a>
+        <!-- Spotify 검색 -->
+        <a class="save-btn" id="btnSP" href="#" target="_blank" title="Spotify에서 찾기">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424a.622.622 0 01-.857.207c-2.348-1.435-5.304-1.76-8.785-.964a.622.622 0 01-.277-1.215c3.809-.87 7.077-.496 9.712 1.115a.623.623 0 01.207.857zm1.223-2.722a.779.779 0 01-1.072.257C14.15 12.334 10.9 11.862 7 12.9a.779.779 0 01-.945-.522.78.78 0 01.522-.946c4.382-1.16 8.006-.578 10.973 1.198a.779.779 0 01.259 1.072zm.105-2.835C15.155 9.086 10.398 8.91 7.635 9.759a.935.935 0 11-.543-1.79c3.17-.964 8.445-.778 11.775 1.17a.936.936 0 01-.953 1.728z"/>
+          </svg>
+          SP
+        </a>
+      </div>
+    </div>
+
+    <!-- 컨트롤 -->
+    <div class="controls">
+      <button class="ctrl" onclick="prev()" title="이전 곡">⏮</button>
+      <button class="ctrl-play" id="playBtn" onclick="togglePlay()">
+        <!-- pause icon default (autoplay) -->
+        <svg id="iconPause" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+        <svg id="iconPlay"  viewBox="0 0 24 24" style="display:none"><polygon points="5,3 19,12 5,21"/></svg>
+      </button>
+      <button class="ctrl" onclick="next()" title="다음 곡">⏭</button>
+    </div>
+
+    <!-- 전체 플레이리스트 바로가기 -->
+    <div class="playlist-wrap">
+      <a class="playlist-btn" id="playlistLink" href="#" target="_blank">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3" cy="6" r="1.5"/><circle cx="3" cy="12" r="1.5"/><circle cx="3" cy="18" r="1.5"/></svg>
+        전체 플레이리스트 YouTube에서 보기
+      </a>
+    </div>
+
+  </div>
+</div>
+
+<!-- YouTube IFrame API -->
+<script>
+// ════════════════════════════════════════════════════════
+//  🎵  무드별 트랙 목록
+//  ┌ id      : YouTube 영상 ID (URL의 v= 뒤 값)
+//  ├ name    : 곡 이름 (Spotify 검색에 사용)
+//  ├ artist  : 아티스트
+//  └ playlist: YouTube 플레이리스트 ID (선택)
+//
+//  ▶ 추가 방법: 유튜브 URL에서 v=XXXXX 부분만 복사해서 id에 넣으세요
+// ════════════════════════════════════════════════════════
+const DATA = {
+  calm: {
+    name: '고요', color: '#1e6480',
+    playlist: 'PLQ3_d1pWEsLQhzOHfQqMJUb8t8P5mGPvF', // 예시 (없어도 됨)
+    tracks: [
+      { id:'UfcAVejslrU', name:'Weightless',         artist:'Marconi Union' },
+      { id:'77ZozI0rw7w', name:'Gymnopédie No.1',    artist:'Erik Satie' },
+      { id:'4Tr0otuiQuU', name:'River Flows In You', artist:'Yiruma' },
+      { id:'DxKSFRQGME4', name:'Experience',         artist:'Ludovico Einaudi' },
+      { id:'WNcsUNKnbEc', name:'Clair de Lune',      artist:'Debussy' },
+      { id:'Y7YDOX7K5LQ', name:'Ambient 1',          artist:'Brian Eno' },
+    ]
+  },
+  happy: {
+    name: '설렘', color: '#bf7030',
+    tracks: [
+      { id:'ru0K8uYEZWw', name:'Good Days',              artist:'SZA' },
+      { id:'KQetemT1sWc', name:'Here Comes the Sun',     artist:'The Beatles' },
+      { id:'BOE9r4PH5B8', name:'Coffee',                 artist:'beabadoobee' },
+      { id:'OPf0YbXqDm0', name:'Happy',                  artist:'Pharrell Williams' },
+      { id:'9rk0JM2Qzrc', name:'Sunflower',              artist:'Post Malone' },
+      { id:'fRh_vgS2dFE', name:'Summer Feeling',         artist:'Gracie Abrams' },
+    ]
+  },
+  melancholy: {
+    name: '감성', color: '#5c3d7a',
+    tracks: [
+      { id:'RBumgq5yVrA', name:'Skinny Love',        artist:'Bon Iver' },
+      { id:'MK9hOP2Wc3Y', name:'밤편지',             artist:'IU' },
+      { id:'pXRviuL6vMY', name:'The Night We Met',   artist:'Lord Huron' },
+      { id:'aJOTlE1K90k', name:'Creep',              artist:'Radiohead' },
+      { id:'fL0R67PxGpI', name:'Holocene',           artist:'Bon Iver' },
+      { id:'RbMq0TiCRio', name:'Motion Picture OST', artist:'Explosions in the Sky' },
+    ]
+  },
+  focus: {
+    name: '집중', color: '#2e6b3c',
+    tracks: [
+      { id:'5qap5aO4i9A', name:'lofi hip hop radio',  artist:'Lofi Girl (LIVE)' },
+      { id:'jfKfPfyJRdk', name:'lofi beats to study', artist:'Lofi Girl' },
+      { id:'4xDzrJKXOOY', name:'Synthwave Radio',     artist:'Synthwave+' },
+      { id:'DWcJFNfaw9c', name:'Piano Study Mix',     artist:'ChilledCow' },
+      { id:'tNkZsRW7h2c', name:'Classical Focus',     artist:'Study Music Project' },
+    ]
+  },
+  romantic: {
+    name: '낭만', color: '#873a5a',
+    tracks: [
+      { id:'rzeLynEvNOk', name:'La Vie En Rose',   artist:'Édith Piaf' },
+      { id:'CML6zTVa-BE', name:'Autumn Leaves',    artist:'Nat King Cole' },
+      { id:'nSDgHBxUbVQ', name:'Kiss Me',          artist:'Ed Sheeran' },
+      { id:'lp-EkBKSGis', name:'Perfect',          artist:'Ed Sheeran' },
+      { id:'pXRviuL6vMY', name:'The Night We Met', artist:'Lord Huron' },
+    ]
+  },
+  energy: {
+    name: '에너지', color: '#a8820a',
+    tracks: [
+      { id:'fHI8X4OXluQ', name:'Blinding Lights',   artist:'The Weeknd' },
+      { id:'rYEDA3JcQqw', name:"Don't Stop Me Now", artist:'Queen' },
+      { id:'ktvTqknDobU', name:'Uptown Funk',        artist:'Bruno Mars' },
+      { id:'IXXxciRUMzE', name:'Levitating',         artist:'Dua Lipa' },
+      { id:'H5v3kku4y6Q', name:'Shake It Off',       artist:'Taylor Swift' },
+    ]
+  }
+};
+
+// ── State ──────────────────────────────────────────────
+let mood     = null;
+let queue    = [];
+let idx      = 0;
+let player   = null;
+let ready    = false;
+let playing  = false;
+
+// ── YouTube API ready ──────────────────────────────────
+window.onYouTubeIframeAPIReady = () => {
+  player = new YT.Player('yt-player', {
+    playerVars: { autoplay:1, controls:1, rel:0, modestbranding:1 },
+    events: {
+      onReady:       () => { ready = true; },
+      onStateChange: onState
+    }
+  });
+};
+
+function onState(e) {
+  if (e.data === YT.PlayerState.PLAYING) { setIcon(true); }
+  if (e.data === YT.PlayerState.PAUSED)  { setIcon(false); }
+  if (e.data === YT.PlayerState.ENDED)   { next(); }
+}
+
+function setIcon(isPlaying) {
+  playing = isPlaying;
+  document.getElementById('iconPause').style.display = isPlaying ? '' : 'none';
+  document.getElementById('iconPlay').style.display  = isPlaying ? 'none' : '';
+}
+
+// ── Shuffle ────────────────────────────────────────────
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length-1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i+1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ── Pick mood ──────────────────────────────────────────
+function pick(m) {
+  mood  = m;
+  queue = shuffle(DATA[m].tracks);
+  idx   = 0;
+
+  const d = DATA[m];
+  document.getElementById('moodTitle').textContent = d.name;
+  document.getElementById('glow').style.background =
+    `radial-gradient(circle at 50% 30%, ${d.color} 0%, transparent 68%)`;
+
+  // playlist link (YouTube search fallback)
+  const pl = d.playlist
+    ? `https://www.youtube.com/playlist?list=${d.playlist}`
+    : `https://www.youtube.com/results?search_query=${encodeURIComponent(d.name+' playlist music')}`;
+  document.getElementById('playlistLink').href = pl;
+
+  document.getElementById('intro').classList.add('hidden');
+  document.getElementById('player').classList.remove('hidden');
+
+  loadTrack(0);
+}
+
+// ── Load + play a track ────────────────────────────────
+function loadTrack(i) {
+  const t = queue[i];
+  document.getElementById('tName').textContent   = t.name;
+  document.getElementById('tArtist').textContent = t.artist;
+
+  // YouTube 직접 링크
+  document.getElementById('btnYT').href =
+    `https://www.youtube.com/watch?v=${t.id}`;
+
+  // Spotify 검색 링크 (곡명 + 아티스트)
+  document.getElementById('btnSP').href =
+    `https://open.spotify.com/search/${encodeURIComponent(t.name + ' ' + t.artist)}`;
+
+  if (ready) {
+    player.loadVideoById(t.id);
+  } else {
+    const wait = setInterval(() => {
+      if (ready) { clearInterval(wait); player.loadVideoById(t.id); }
+    }, 150);
+  }
+}
+
+// ── Controls ───────────────────────────────────────────
+function togglePlay() {
+  if (!ready) return;
+  if (playing) player.pauseVideo();
+  else         player.playVideo();
+}
+
+function next() {
+  idx = (idx + 1) % queue.length;
+  loadTrack(idx);
+}
+
+function prev() {
+  idx = (idx - 1 + queue.length) % queue.length;
+  loadTrack(idx);
+}
+
+function goBack() {
+  if (ready) player.pauseVideo();
+  document.getElementById('player').classList.add('hidden');
+  setTimeout(() => document.getElementById('intro').classList.remove('hidden'), 100);
+}
+
+// ── Load YouTube IFrame API ────────────────────────────
+const s = document.createElement('script');
+s.src = 'https://www.youtube.com/iframe_api';
+document.head.appendChild(s);
+</script>
+</body>
+</html>
