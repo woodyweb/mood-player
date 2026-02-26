@@ -307,76 +307,72 @@ body::after {
 <script>
 // ════════════════════════════════════════════════════════
 //  🎵  무드별 트랙 목록
-//  ┌ id      : YouTube 영상 ID (URL의 v= 뒤 값)
-//  ├ name    : 곡 이름 (Spotify 검색에 사용)
-//  ├ artist  : 아티스트
-//  └ playlist: YouTube 플레이리스트 ID (선택)
-//
 //  ▶ 추가 방법: 유튜브 URL에서 v=XXXXX 부분만 복사해서 id에 넣으세요
+//  ℹ️  임베드 차단된 영상은 자동으로 다음 곡으로 넘어갑니다
 // ════════════════════════════════════════════════════════
 const DATA = {
   calm: {
     name: '고요', color: '#1e6480',
-    playlist: 'PLQ3_d1pWEsLQhzOHfQqMJUb8t8P5mGPvF', // 예시 (없어도 됨)
     tracks: [
-      { id:'UfcAVejslrU', name:'Weightless',         artist:'Marconi Union' },
-      { id:'77ZozI0rw7w', name:'Gymnopédie No.1',    artist:'Erik Satie' },
-      { id:'4Tr0otuiQuU', name:'River Flows In You', artist:'Yiruma' },
-      { id:'DxKSFRQGME4', name:'Experience',         artist:'Ludovico Einaudi' },
-      { id:'WNcsUNKnbEc', name:'Clair de Lune',      artist:'Debussy' },
-      { id:'Y7YDOX7K5LQ', name:'Ambient 1',          artist:'Brian Eno' },
+      { id:'UfcAVejslrU', name:'Weightless',              artist:'Marconi Union' },
+      { id:'77ZozI0rw7w', name:'Gymnopédie No.1',         artist:'Erik Satie' },
+      { id:'4Tr0otuiQuU', name:'River Flows In You',      artist:'Yiruma' },
+      { id:'_mZD9o4vBMQ', name:'Comptine d\'un autre été',artist:'Yann Tiersen' },
+      { id:'c1GxjzKfNe8', name:'Metamorphosis Two',       artist:'Philip Glass' },
+      { id:'0-Tm65i96lk', name:'Sleep',                   artist:'Max Richter' },
     ]
   },
   happy: {
     name: '설렘', color: '#bf7030',
     tracks: [
-      { id:'ru0K8uYEZWw', name:'Good Days',              artist:'SZA' },
-      { id:'KQetemT1sWc', name:'Here Comes the Sun',     artist:'The Beatles' },
-      { id:'BOE9r4PH5B8', name:'Coffee',                 artist:'beabadoobee' },
-      { id:'OPf0YbXqDm0', name:'Happy',                  artist:'Pharrell Williams' },
-      { id:'9rk0JM2Qzrc', name:'Sunflower',              artist:'Post Malone' },
-      { id:'fRh_vgS2dFE', name:'Summer Feeling',         artist:'Gracie Abrams' },
+      { id:'OPf0YbXqDm0', name:'Happy',                   artist:'Pharrell Williams' },
+      { id:'ktvTqknDobU', name:'Uptown Funk',              artist:'Bruno Mars' },
+      { id:'nfWlot6h_JM', name:'Shape of You',             artist:'Ed Sheeran' },
+      { id:'ru0K8uYEZWw', name:'Good Days',                artist:'SZA' },
+      { id:'PT2_F-1esPk', name:'Levitating',               artist:'Dua Lipa' },
+      { id:'TUVcZfQe-Kw', name:'Peaches',                  artist:'Justin Bieber' },
     ]
   },
   melancholy: {
     name: '감성', color: '#5c3d7a',
     tracks: [
-      { id:'RBumgq5yVrA', name:'Skinny Love',        artist:'Bon Iver' },
-      { id:'MK9hOP2Wc3Y', name:'밤편지',             artist:'IU' },
-      { id:'pXRviuL6vMY', name:'The Night We Met',   artist:'Lord Huron' },
-      { id:'aJOTlE1K90k', name:'Creep',              artist:'Radiohead' },
-      { id:'fL0R67PxGpI', name:'Holocene',           artist:'Bon Iver' },
-      { id:'RbMq0TiCRio', name:'Motion Picture OST', artist:'Explosions in the Sky' },
+      { id:'RBumgq5yVrA', name:'Skinny Love',              artist:'Bon Iver' },
+      { id:'aJOTlE1K90k', name:'Creep',                    artist:'Radiohead' },
+      { id:'fL0R67PxGpI', name:'Holocene',                 artist:'Bon Iver' },
+      { id:'3JWTaaS7LdU', name:'The Night We Met',         artist:'Lord Huron' },
+      { id:'es8-RH63rGY', name:'Someone Like You',         artist:'Adele' },
+      { id:'TLV4_xaYynY', name:'Fix You',                  artist:'Coldplay' },
     ]
   },
   focus: {
     name: '집중', color: '#2e6b3c',
     tracks: [
-      { id:'5qap5aO4i9A', name:'lofi hip hop radio',  artist:'Lofi Girl (LIVE)' },
-      { id:'jfKfPfyJRdk', name:'lofi beats to study', artist:'Lofi Girl' },
-      { id:'4xDzrJKXOOY', name:'Synthwave Radio',     artist:'Synthwave+' },
-      { id:'DWcJFNfaw9c', name:'Piano Study Mix',     artist:'ChilledCow' },
-      { id:'tNkZsRW7h2c', name:'Classical Focus',     artist:'Study Music Project' },
+      { id:'jfKfPfyJRdk', name:'lofi beats to study',     artist:'Lofi Girl' },
+      { id:'5yx6BWlEVcY', name:'lofi hip hop mix',         artist:'Lofi Girl' },
+      { id:'n61ULEU7CO0', name:'Chillhop Essentials',      artist:'Chillhop Music' },
+      { id:'lTRiuFIWV54', name:'Jazz for Study',           artist:'Cafe Music BGM' },
+      { id:'7NOSDKb0HlU', name:'Deep Focus Piano',         artist:'Quiet Quest' },
     ]
   },
   romantic: {
     name: '낭만', color: '#873a5a',
     tracks: [
-      { id:'rzeLynEvNOk', name:'La Vie En Rose',   artist:'Édith Piaf' },
-      { id:'CML6zTVa-BE', name:'Autumn Leaves',    artist:'Nat King Cole' },
-      { id:'nSDgHBxUbVQ', name:'Kiss Me',          artist:'Ed Sheeran' },
-      { id:'lp-EkBKSGis', name:'Perfect',          artist:'Ed Sheeran' },
-      { id:'pXRviuL6vMY', name:'The Night We Met', artist:'Lord Huron' },
+      { id:'CML6zTVa-BE', name:'Autumn Leaves',            artist:'Nat King Cole' },
+      { id:'nSDgHBxUbVQ', name:'Kiss Me',                  artist:'Ed Sheeran' },
+      { id:'lp-EkBKSGis', name:'Perfect',                  artist:'Ed Sheeran' },
+      { id:'Ho9om7OuMGI', name:'La Vie En Rose',           artist:'Louis Armstrong' },
+      { id:'o_v9MY_FMsw', name:'At Last',                  artist:'Etta James' },
     ]
   },
   energy: {
     name: '에너지', color: '#a8820a',
     tracks: [
-      { id:'fHI8X4OXluQ', name:'Blinding Lights',   artist:'The Weeknd' },
-      { id:'rYEDA3JcQqw', name:"Don't Stop Me Now", artist:'Queen' },
-      { id:'ktvTqknDobU', name:'Uptown Funk',        artist:'Bruno Mars' },
-      { id:'IXXxciRUMzE', name:'Levitating',         artist:'Dua Lipa' },
-      { id:'H5v3kku4y6Q', name:'Shake It Off',       artist:'Taylor Swift' },
+      { id:'rYEDA3JcQqw', name:"Don't Stop Me Now",        artist:'Queen' },
+      { id:'ktvTqknDobU', name:'Uptown Funk',              artist:'Bruno Mars' },
+      { id:'fHI8X4OXluQ', name:'Blinding Lights',          artist:'The Weeknd' },
+      { id:'H5v3kku4y6Q', name:'Shake It Off',             artist:'Taylor Swift' },
+      { id:'IaYlSJiMBFc', name:'Counting Stars',           artist:'OneRepublic' },
+      { id:'YqeW9_5kURI', name:'Thunder',                  artist:'Imagine Dragons' },
     ]
   }
 };
@@ -401,10 +397,23 @@ window.onYouTubeIframeAPIReady = () => {
 };
 
 function onState(e) {
-  if (e.data === YT.PlayerState.PLAYING) { setIcon(true); }
-  if (e.data === YT.PlayerState.PAUSED)  { setIcon(false); }
-  if (e.data === YT.PlayerState.ENDED)   { next(); }
+  if (e.data === YT.PlayerState.PLAYING)  { setIcon(true); skipCount = 0; }
+  if (e.data === YT.PlayerState.PAUSED)   { setIcon(false); }
+  if (e.data === YT.PlayerState.ENDED)    { next(); }
+  // -1 = 로드 실패 (임베드 차단) → 2.5초 후 자동 스킵
+  if (e.data === -1 || e.data === YT.PlayerState.UNSTARTED) {
+    clearTimeout(skipTimer);
+    skipTimer = setTimeout(() => {
+      if (player.getPlayerState() !== YT.PlayerState.PLAYING) {
+        skipCount++;
+        if (skipCount < queue.length) next();
+        else skipCount = 0;
+      }
+    }, 2500);
+  }
 }
+let skipCount = 0;
+let skipTimer  = null;
 
 function setIcon(isPlaying) {
   playing = isPlaying;
