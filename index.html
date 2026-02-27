@@ -3,120 +3,465 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>오늘의 무드</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&family=DM+Serif+Display:ital@0;1&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<title>Mood Player</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root { --bg: #0c0c0c; --text: #f0ece4; --muted: #6b6560; }
-html, body { height:100%; background:var(--bg); color:var(--text); font-family:'Noto Serif KR',serif; overflow:hidden; -webkit-font-smoothing:antialiased; }
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
 
-.screen { position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:opacity .55s ease, transform .55s ease; }
-.screen.hidden { opacity:0; pointer-events:none; transform:translateY(20px); }
+html, body {
+  height:100%;
+  background: radial-gradient(ellipse at center, #2a2a2a 0%, #111 100%);
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Noto Sans KR', sans-serif;
+  overflow:hidden;
+  user-select:none; -webkit-user-select:none;
+  touch-action:none;
+}
 
-/* ── INTRO ── */
-#intro { gap:10px; padding:36px 24px 40px; }
-.eyebrow { font-family:'Instrument Serif',serif; font-style:italic; font-size:12px; letter-spacing:3.5px; color:var(--muted); text-transform:uppercase; animation:up .6s .0s both; }
-.main-title { font-family:'DM Serif Display',serif; font-size:clamp(28px,7.5vw,48px); font-weight:400; line-height:1.15; text-align:center; margin:6px 0 4px; animation:up .6s .08s both; }
-.sub-title { font-size:12.5px; color:var(--muted); text-align:center; margin-bottom:32px; font-weight:300; animation:up .6s .16s both; }
+/* ════════════════════════════
+   SCREENS
+════════════════════════════ */
+.screen {
+  position:fixed; inset:0;
+  display:flex; align-items:center; justify-content:center;
+  transition:opacity .45s ease, transform .45s ease;
+}
+.screen.hidden { opacity:0; pointer-events:none; transform:scale(.96); }
 
-.mood-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:11px; width:100%; max-width:356px; }
-.mood-card { aspect-ratio:1; border-radius:22px; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; padding:13px 10px; cursor:pointer; overflow:hidden; position:relative; transition:transform .22s ease; -webkit-tap-highlight-color:transparent; animation:up .5s both; opacity:0; }
-.mood-card:nth-child(1){animation-delay:.06s} .mood-card:nth-child(2){animation-delay:.11s}
-.mood-card:nth-child(3){animation-delay:.16s} .mood-card:nth-child(4){animation-delay:.21s}
-.mood-card:nth-child(5){animation-delay:.26s} .mood-card:nth-child(6){animation-delay:.31s}
-.mood-card:active { transform:scale(.91); }
-.mood-card .ico  { font-size:26px; margin-bottom:5px; position:relative; z-index:1; }
-.mood-card .lbl  { font-size:13px; font-weight:600; color:rgba(255,255,255,.94); position:relative; z-index:1; text-shadow:0 1px 6px rgba(0,0,0,.5); }
-.mood-card .slbl { font-size:10px; color:rgba(255,255,255,.5); position:relative; z-index:1; margin-top:2px; font-weight:300; }
-.c-calm       { background:linear-gradient(148deg,#152e3a,#1e6480); }
-.c-happy      { background:linear-gradient(148deg,#4a2f00,#bf7030); }
-.c-melancholy { background:linear-gradient(148deg,#211538,#5c3d7a); }
-.c-focus      { background:linear-gradient(148deg,#142014,#2e6b3c); }
-.c-romantic   { background:linear-gradient(148deg,#330f1e,#873a5a); }
-.c-energy     { background:linear-gradient(148deg,#2e2200,#a8820a); }
+/* ════════════════════════════
+   iPOD BODY
+════════════════════════════ */
+.ipod {
+  width: 240px;
+  background: linear-gradient(170deg, #fafaff 0%, #e8e8e8 45%, #d0d0ce 100%);
+  border-radius: 30px;
+  padding: 14px 14px 22px;
+  position: relative;
+  box-shadow:
+    inset 0 2px 3px rgba(255,255,255,.9),
+    inset 0 -2px 3px rgba(0,0,0,.15),
+    0 25px 60px rgba(0,0,0,.6),
+    0 8px 20px rgba(0,0,0,.4),
+    0 2px 4px rgba(0,0,0,.3);
+}
 
-/* ── PLAYER ── */
-#player { padding:0 24px 20px; justify-content:flex-start; overflow-y:auto; }
-.player-glow { position:fixed; inset:0; z-index:0; opacity:.15; transition:background 1.4s ease; filter:blur(80px); pointer-events:none; }
-.player-inner { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; width:100%; max-width:360px; padding-top:max(env(safe-area-inset-top,16px),16px); }
+/* plastic sheen */
+.ipod::before {
+  content:'';
+  position:absolute; top:0; left:0; right:0; height:55%;
+  border-radius:30px 30px 60% 60%;
+  background:linear-gradient(180deg, rgba(255,255,255,.5) 0%, transparent 100%);
+  pointer-events:none; z-index:10;
+}
 
-.topbar { width:100%; display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; padding-top:10px; }
-.back-btn { background:none; border:none; color:var(--muted); font-family:'Noto Serif KR',serif; font-size:12.5px; cursor:pointer; letter-spacing:.8px; transition:color .2s; padding:6px 0; }
-.back-btn:hover { color:var(--text); }
-.shuffle-pill { font-size:11px; color:var(--muted); letter-spacing:.8px; display:flex; align-items:center; gap:5px; }
+/* side chrome edge */
+.ipod::after {
+  content:'';
+  position:absolute; inset:0;
+  border-radius:30px;
+  border:1px solid rgba(255,255,255,.6);
+  pointer-events:none; z-index:11;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.1);
+}
 
-.mood-label { font-family:'Instrument Serif',serif; font-style:italic; font-size:11.5px; letter-spacing:3px; text-transform:uppercase; color:var(--muted); margin-bottom:4px; align-self:flex-start; }
-.mood-title { font-family:'DM Serif Display',serif; font-size:clamp(34px,10vw,52px); font-weight:400; align-self:flex-start; margin-bottom:20px; line-height:1; }
+/* ════════════════════════════
+   LCD SCREEN
+════════════════════════════ */
+.screen-bezel {
+  background: #111;
+  border-radius: 8px;
+  padding: 2px;
+  margin-bottom: 14px;
+  box-shadow:
+    inset 0 2px 6px rgba(0,0,0,.8),
+    0 1px 0 rgba(255,255,255,.3);
+}
 
-/* YouTube 플레이어 */
-#yt-wrap { width:100%; border-radius:16px; overflow:hidden; margin-bottom:16px; background:#111; aspect-ratio:16/9; }
+.lcd {
+  width: 100%;
+  height: 162px;
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+  background: #b8d4b0;
+  /* LCD pixel grid effect */
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(0,0,0,.04) 1px, rgba(0,0,0,.04) 2px),
+    linear-gradient(180deg, #c0d8b8 0%, #a8c8a0 100%);
+}
+
+/* slight LCD reflection */
+.lcd::after {
+  content:'';
+  position:absolute; top:0; left:0; right:0; height:40%;
+  background:linear-gradient(180deg, rgba(255,255,255,.15) 0%, transparent 100%);
+  pointer-events:none;
+}
+
+/* ── header bar ── */
+.lcd-header {
+  background: linear-gradient(180deg, #4466bb 0%, #2244aa 100%);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 600;
+  text-align: center;
+  padding: 3px 8px;
+  letter-spacing: .5px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.lcd-header .h-title { flex:1; text-align:center; }
+.lcd-header .h-icon  { font-size:9px; opacity:.8; }
+
+/* ── menu items ── */
+.lcd-menu {
+  padding: 1px 0;
+}
+
+.lcd-row {
+  display: flex;
+  align-items: center;
+  padding: 4px 7px;
+  gap: 6px;
+  font-size: 11px;
+  color: #182818;
+  font-weight: 400;
+  line-height: 1.2;
+  cursor: default;
+  transition: background .06s;
+}
+.lcd-row .r-icon { font-size: 13px; width: 16px; text-align:center; flex-shrink:0; }
+.lcd-row .r-name { flex:1; }
+.lcd-row .r-sub  { font-size:9px; color:#4a6a4a; margin-left:auto; }
+.lcd-row .r-arr  { font-size:10px; color:#6a8a6a; flex-shrink:0; }
+
+.lcd-row.active {
+  background: #2244aa;
+  color: #fff;
+  border-radius: 2px;
+}
+.lcd-row.active .r-sub { color:rgba(255,255,255,.65); }
+.lcd-row.active .r-arr { color:rgba(255,255,255,.7); }
+
+/* ── status bar ── */
+.lcd-status {
+  position:absolute; bottom:0; left:0; right:0;
+  padding:2px 7px;
+  display:flex; justify-content:space-between; align-items:center;
+  font-size:8px; color:rgba(0,0,0,.4);
+  background:rgba(0,0,0,.06);
+  font-family:monospace;
+}
+.batt { display:flex; align-items:center; gap:1px; }
+.batt-body {
+  width:16px; height:7px;
+  border:1px solid rgba(0,0,0,.35); border-radius:1px;
+  padding:1px; position:relative;
+}
+.batt-fill { width:68%; height:100%; background:#3a8a3a; border-radius:1px; }
+.batt-nub  { width:2px; height:3px; background:rgba(0,0,0,.3); border-radius:0 1px 1px 0; }
+
+/* ════════════════════════════
+   CLICK WHEEL AREA
+════════════════════════════ */
+.wheel-section {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+}
+
+/* The outer wheel ring (CSS) */
+.wheel-shell {
+  width: 210px;
+  height: 210px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 32%,
+    #e0e0de 0%,
+    #c8c8c6 40%,
+    #b0b0ae 70%,
+    #a0a0a0 100%
+  );
+  box-shadow:
+    inset 0 2px 4px rgba(255,255,255,.7),
+    inset 0 -2px 4px rgba(0,0,0,.2),
+    0 4px 14px rgba(0,0,0,.35),
+    0 2px 4px rgba(0,0,0,.2);
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+/* chrome outer rim */
+.wheel-shell::before {
+  content:'';
+  position:absolute; inset:-1px;
+  border-radius:50%;
+  background:linear-gradient(135deg, rgba(255,255,255,.5) 0%, transparent 50%, rgba(0,0,0,.1) 100%);
+  pointer-events:none;
+}
+
+/* jQuery Knob canvas wrapper — covers the ring area */
+.knob-wrap {
+  position:absolute; inset:0;
+  border-radius:50%;
+  /* the canvas sits here, transparent center shows through */
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer;
+  z-index:2;
+}
+.knob-wrap canvas {
+  /* make canvas non-blocking for center button */
+  pointer-events:none;
+}
+/* re-enable pointer on the outer ring area */
+.wheel-shell { cursor:grab; }
+.wheel-shell:active { cursor:grabbing; }
+
+/* Wheel labels */
+.wl {
+  position:absolute;
+  font-size:8.5px;
+  font-weight:600;
+  color:#888;
+  letter-spacing:.5px;
+  pointer-events:none;
+  z-index:3;
+  text-transform:uppercase;
+}
+.wl-top    { top:7px;   left:50%; transform:translateX(-50%); }
+.wl-left   { left:8px;  top:50%;  transform:translateY(-50%); font-size:13px; }
+.wl-right  { right:8px; top:50%;  transform:translateY(-50%); font-size:13px; }
+.wl-bottom { bottom:7px;left:50%; transform:translateX(-50%); font-size:12px; }
+
+/* ── Center Button ── */
+.center-btn {
+  position:absolute;
+  width:74px; height:74px;
+  border-radius:50%;
+  background: radial-gradient(circle at 38% 34%,
+    #f4f4f2 0%,
+    #dcdcda 55%,
+    #cacac8 100%
+  );
+  box-shadow:
+    inset 0 1px 3px rgba(255,255,255,.8),
+    inset 0 -1px 3px rgba(0,0,0,.15),
+    0 3px 8px rgba(0,0,0,.25),
+    0 1px 3px rgba(0,0,0,.2);
+  cursor:pointer;
+  z-index:10;
+  transition:transform .1s, box-shadow .1s;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.center-btn:hover {
+  box-shadow:
+    inset 0 1px 3px rgba(255,255,255,.8),
+    inset 0 -1px 3px rgba(0,0,0,.15),
+    0 4px 10px rgba(0,0,0,.3),
+    0 1px 3px rgba(0,0,0,.2);
+}
+.center-btn.pressed,
+.center-btn:active {
+  transform:scale(.94);
+  box-shadow:
+    inset 0 2px 5px rgba(0,0,0,.2),
+    0 1px 3px rgba(0,0,0,.15);
+}
+
+/* ── iPod logo area ── */
+.ipod-logo {
+  text-align:center;
+  margin-top: -8px;
+  margin-bottom: 6px;
+  font-size: 9px;
+  letter-spacing: 2.5px;
+  color: #aaa;
+  font-weight:300;
+}
+
+/* ════════════════════════════
+   PLAYER SCREEN
+════════════════════════════ */
+#player-screen {
+  background:#0c0c0c;
+  flex-direction:column;
+}
+.player-glow {
+  position:fixed; inset:0; z-index:0;
+  opacity:.12; filter:blur(90px);
+  transition:background 1.4s ease;
+  pointer-events:none;
+}
+.player-inner {
+  position:relative; z-index:1;
+  display:flex; flex-direction:column;
+  align-items:center; width:100%; max-width:360px;
+  padding:max(env(safe-area-inset-top,16px),16px) 24px 20px;
+  color:#f0ece4;
+}
+.topbar {
+  width:100%; display:flex; align-items:center;
+  justify-content:space-between; margin-bottom:18px;
+}
+.back-btn {
+  background:none; border:none; color:#5a5560;
+  font-family:'Noto Sans KR',sans-serif; font-size:12px;
+  cursor:pointer; letter-spacing:.5px; padding:6px 0;
+  transition:color .2s;
+}
+.back-btn:hover { color:#f0ece4; }
+.mood-badge {
+  font-size:10px; color:#5a5560; letter-spacing:2px;
+  font-style:italic;
+}
+.player-mood-title {
+  font-size:clamp(30px,9vw,48px); font-weight:300;
+  align-self:flex-start; margin-bottom:18px; line-height:1;
+  letter-spacing:-1px;
+}
+#yt-wrap {
+  width:100%; border-radius:14px; overflow:hidden;
+  margin-bottom:14px; background:#111; aspect-ratio:16/9;
+}
 #yt-wrap iframe { width:100%; height:100%; display:block; border:none; }
-
-/* 곡 정보 + 저장 버튼 */
-.track-row { width:100%; display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; gap:12px; }
+.track-row {
+  width:100%; display:flex; align-items:center;
+  justify-content:space-between; margin-bottom:14px; gap:12px;
+}
 .track-text { flex:1; min-width:0; }
-.track-name { font-size:15px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.track-artist { font-size:12px; color:var(--muted); margin-top:3px; font-weight:300; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.track-name {
+  font-size:14px; font-weight:500; color:#f0ece4;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.track-artist {
+  font-size:11px; color:#5a5560; margin-top:3px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.save-btns { display:flex; gap:7px; flex-shrink:0; }
+.save-btn {
+  display:flex; align-items:center; gap:4px;
+  padding:6px 10px; border-radius:20px;
+  border:1px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.04);
+  text-decoration:none; color:#5a5560;
+  font-size:10.5px;
+  transition:color .2s, border-color .2s; white-space:nowrap;
+}
+.save-btn:hover { color:#f0ece4; border-color:rgba(255,255,255,.3); }
+.save-btn svg { width:11px; height:11px; flex-shrink:0; }
+.p-controls {
+  width:100%; display:flex; align-items:center;
+  justify-content:center; gap:30px; margin-bottom:18px;
+}
+.p-ctrl {
+  background:none; border:none; color:#5a5560;
+  cursor:pointer; padding:8px; font-size:20px;
+  transition:color .2s, transform .15s;
+}
+.p-ctrl:hover { color:#f0ece4; transform:scale(1.1); }
+.p-play {
+  width:55px; height:55px; border-radius:50%;
+  background:#f0ece4; border:none; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:transform .15s;
+  box-shadow:0 0 28px rgba(240,236,228,.18);
+}
+.p-play svg { width:20px; height:20px; fill:#0c0c0c; }
+.p-playlist {
+  display:inline-flex; align-items:center; gap:6px;
+  font-size:11px; color:#5a5560; text-decoration:none;
+  border:1px solid rgba(255,255,255,.1); border-radius:20px;
+  padding:7px 16px; transition:color .2s, border-color .2s; letter-spacing:.5px;
+}
+.p-playlist:hover { color:#f0ece4; border-color:rgba(255,255,255,.3); }
+.status-msg { font-size:10px; color:#5a5560; text-align:center; min-height:14px; margin-bottom:6px; }
 
-.save-btns { display:flex; gap:8px; flex-shrink:0; }
-.save-btn { display:flex; align-items:center; gap:5px; padding:7px 12px; border-radius:20px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); text-decoration:none; color:var(--muted); font-size:11px; font-family:'Noto Serif KR',serif; transition:color .2s,border-color .2s,background .2s; white-space:nowrap; }
-.save-btn:hover { color:var(--text); border-color:rgba(255,255,255,.3); background:rgba(255,255,255,.08); }
-.save-btn svg { width:13px; height:13px; flex-shrink:0; }
+/* touch ripple on center button */
+@keyframes ripple {
+  from { transform:scale(0.8); opacity:.5; }
+  to   { transform:scale(1.15); opacity:0; }
+}
+.ripple-ring {
+  position:absolute; inset:-6px;
+  border-radius:50%; border:2px solid rgba(100,160,255,.6);
+  animation:ripple .4s ease-out forwards;
+  pointer-events:none;
+}
 
-/* 컨트롤 */
-.controls { width:100%; display:flex; align-items:center; justify-content:center; gap:32px; margin-bottom:24px; }
-.ctrl { background:none; border:none; color:var(--muted); cursor:pointer; padding:8px; font-size:22px; transition:color .2s,transform .15s; }
-.ctrl:hover { color:var(--text); transform:scale(1.1); }
-.ctrl:active { transform:scale(.93); }
-.ctrl-play { width:60px; height:60px; border-radius:50%; background:var(--text); color:var(--bg); border:none; cursor:pointer; font-size:0; display:flex; align-items:center; justify-content:center; transition:transform .15s,box-shadow .2s; box-shadow:0 0 32px rgba(240,236,228,.18); }
-.ctrl-play:hover { transform:scale(1.06); box-shadow:0 0 42px rgba(240,236,228,.28); }
-.ctrl-play:active { transform:scale(.96); }
-.ctrl-play svg { width:22px; height:22px; fill:var(--bg); }
-
-/* 플레이리스트 안내 */
-.playlist-wrap { width:100%; text-align:center; }
-.playlist-btn { display:inline-flex; align-items:center; gap:7px; font-size:12px; color:var(--muted); letter-spacing:.8px; text-decoration:none; border:1px solid rgba(255,255,255,.1); border-radius:20px; padding:8px 18px; transition:color .2s,border-color .2s; }
-.playlist-btn:hover { color:var(--text); border-color:rgba(255,255,255,.3); }
-
-/* 상태 메시지 */
-.status-msg { font-size:11px; color:var(--muted); text-align:center; height:16px; margin-bottom:8px; }
-
-@keyframes up { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
-body::after { content:''; position:fixed; inset:0; pointer-events:none; opacity:.03; z-index:9999; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+body::after {
+  content:''; position:fixed; inset:0; pointer-events:none;
+  opacity:.022; z-index:9999;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
 </style>
 </head>
 <body>
 
-<!-- ═══ INTRO ═══ -->
-<div class="screen" id="intro">
-  <p class="eyebrow">NFC mood player</p>
-  <h1 class="main-title">오늘의 나는<br>어떤 기분인가요</h1>
-  <p class="sub-title">무드를 선택하면 음악이 시작됩니다</p>
-  <div class="mood-grid">
-    <div class="mood-card c-calm"       onclick="pick('calm')">      <span class="ico">🌊</span><span class="lbl">고요</span><span class="slbl">calm</span></div>
-    <div class="mood-card c-happy"      onclick="pick('happy')">     <span class="ico">☀️</span><span class="lbl">설렘</span><span class="slbl">joyful</span></div>
-    <div class="mood-card c-melancholy" onclick="pick('melancholy')"><span class="ico">🌙</span><span class="lbl">감성</span><span class="slbl">melancholy</span></div>
-    <div class="mood-card c-focus"      onclick="pick('focus')">     <span class="ico">🌿</span><span class="lbl">집중</span><span class="slbl">focus</span></div>
-    <div class="mood-card c-romantic"   onclick="pick('romantic')">  <span class="ico">🌹</span><span class="lbl">낭만</span><span class="slbl">romantic</span></div>
-    <div class="mood-card c-energy"     onclick="pick('energy')">    <span class="ico">⚡</span><span class="lbl">에너지</span><span class="slbl">energetic</span></div>
+<!-- ══════════════ iPOD ══════════════ -->
+<div class="screen" id="ipod-screen">
+  <div class="ipod">
+
+    <!-- Screen -->
+    <div class="screen-bezel">
+      <div class="lcd" id="lcd">
+        <div class="lcd-header">
+          <span class="h-icon">&nbsp;</span>
+          <span class="h-title">무드 선택</span>
+          <span class="h-icon">▶</span>
+        </div>
+        <div class="lcd-menu" id="lcdMenu"></div>
+        <div class="lcd-status">
+          <span id="lcdClock">--:--</span>
+          <div class="batt">
+            <div class="batt-body"><div class="batt-fill"></div></div>
+            <div class="batt-nub"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- iPod wordmark -->
+    <div class="ipod-logo">&nbsp;</div>
+
+    <!-- Wheel -->
+    <div class="wheel-section">
+      <div class="wheel-shell" id="wheelShell">
+
+        <!-- jQuery Knob (infinite scroll detection) -->
+        <div class="knob-wrap" id="knobWrap">
+          <input class="ipod-knob" type="text" value="0">
+        </div>
+
+        <!-- Labels -->
+        <span class="wl wl-top">MENU</span>
+        <span class="wl wl-left">⏮</span>
+        <span class="wl wl-right">⏭</span>
+        <span class="wl wl-bottom">▶⏸</span>
+
+        <!-- Center button -->
+        <div class="center-btn" id="centerBtn"></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
-<!-- ═══ PLAYER ═══ -->
-<div class="screen hidden" id="player">
+<!-- ══════════════ PLAYER ══════════════ -->
+<div class="screen hidden" id="player-screen">
   <div class="player-glow" id="glow"></div>
   <div class="player-inner">
     <div class="topbar">
-      <button class="back-btn" onclick="goBack()">← 무드 다시 선택</button>
-      <div class="shuffle-pill">🔀 셔플</div>
+      <button class="back-btn" onclick="goBack()">← mood select</button>
+      <span class="mood-badge" id="moodBadge">calm</span>
     </div>
-    <p class="mood-label">NOW PLAYING FOR</p>
-    <h2 class="mood-title" id="moodTitle">고요</h2>
-
+    <h2 class="player-mood-title" id="moodTitle">고요</h2>
     <div id="yt-wrap"><div id="yt-player"></div></div>
-
     <p class="status-msg" id="statusMsg"></p>
-
     <div class="track-row">
       <div class="track-text">
         <p class="track-name"   id="tName">재생 준비 중...</p>
@@ -124,214 +469,266 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; opacity:
       </div>
       <div class="save-btns">
         <a class="save-btn" id="btnYT" href="#" target="_blank">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22.54 6.42A2.78 2.78 0 0020.7 4.6C19.07 4 12 4 12 4s-7.07 0-8.7.6A2.78 2.78 0 001.46 6.42 29.94 29.94 0 001 12a29.94 29.94 0 00.46 5.58A2.78 2.78 0 003.3 19.4C4.93 20 12 20 12 20s7.07 0 8.7-.6a2.78 2.78 0 001.84-1.82A29.94 29.94 0 0023 12a29.94 29.94 0 00-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="currentColor" stroke="none"/></svg>
-          YouTube
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22.54 6.42A2.78 2.78 0 0020.7 4.6C19.07 4 12 4 12 4s-7.07 0-8.7.6A2.78 2.78 0 001.46 6.42 29.94 29.94 0 001 12a29.94 29.94 0 00.46 5.58A2.78 2.78 0 003.3 19.4C4.93 20 12 20 12 20s7.07 0 8.7-.6a2.78 2.78 0 001.84-1.82A29.94 29.94 0 0023 12a29.94 29.94 0 00-.46-5.58z"/>
+            <polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="currentColor" stroke="none"/>
+          </svg>YouTube
         </a>
         <a class="save-btn" id="btnSP" href="#" target="_blank">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424a.622.622 0 01-.857.207c-2.348-1.435-5.304-1.76-8.785-.964a.622.622 0 01-.277-1.215c3.809-.87 7.077-.496 9.712 1.115a.623.623 0 01.207.857zm1.223-2.722a.779.779 0 01-1.072.257C14.15 12.334 10.9 11.862 7 12.9a.779.779 0 01-.945-.522.78.78 0 01.522-.946c4.382-1.16 8.006-.578 10.973 1.198a.779.779 0 01.259 1.072zm.105-2.835C15.155 9.086 10.398 8.91 7.635 9.759a.935.935 0 11-.543-1.79c3.17-.964 8.445-.778 11.775 1.17a.936.936 0 01-.953 1.728z"/></svg>
-          Spotify
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424a.622.622 0 01-.857.207c-2.348-1.435-5.304-1.76-8.785-.964a.622.622 0 01-.277-1.215c3.809-.87 7.077-.496 9.712 1.115a.623.623 0 01.207.857zm1.223-2.722a.779.779 0 01-1.072.257C14.15 12.334 10.9 11.862 7 12.9a.779.779 0 01-.945-.522.78.78 0 01.522-.946c4.382-1.16 8.006-.578 10.973 1.198a.779.779 0 01.259 1.072zm.105-2.835C15.155 9.086 10.398 8.91 7.635 9.759a.935.935 0 11-.543-1.79c3.17-.964 8.445-.778 11.775 1.17a.936.936 0 01-.953 1.728z"/>
+          </svg>Spotify
         </a>
       </div>
     </div>
-
-    <div class="controls">
-      <button class="ctrl" onclick="prevTrack()" title="이전">⏮</button>
-      <button class="ctrl-play" id="playBtn" onclick="togglePlay()">
+    <div class="p-controls">
+      <button class="p-ctrl" onclick="prevTrack()">⏮</button>
+      <button class="p-play" id="playBtn" onclick="togglePlay()">
         <svg id="iconPause" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
         <svg id="iconPlay"  viewBox="0 0 24 24" style="display:none"><polygon points="5,3 19,12 5,21"/></svg>
       </button>
-      <button class="ctrl" onclick="nextTrack()" title="다음">⏭</button>
+      <button class="p-ctrl" onclick="nextTrack()">⏭</button>
     </div>
-
-    <div class="playlist-wrap">
-      <a class="playlist-btn" id="playlistLink" href="#" target="_blank">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3" cy="6" r="1.5"/><circle cx="3" cy="12" r="1.5"/><circle cx="3" cy="18" r="1.5"/></svg>
-        YouTube에서 전체 플레이리스트 보기
-      </a>
-    </div>
+    <a class="p-playlist" id="playlistLink" href="#" target="_blank">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+        <line x1="8" y1="18" x2="21" y2="18"/>
+        <circle cx="3" cy="6" r="1.5"/><circle cx="3" cy="12" r="1.5"/><circle cx="3" cy="18" r="1.5"/>
+      </svg>
+      Click View all to see all the playlists
+    </a>
   </div>
 </div>
 
+<!-- jQuery + jQuery Knob (인라인) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script>
-// ════════════════════════════════════════════════════════════════════
-//  🎵 무드별 YouTube 플레이리스트 ID
-//
-//  플레이리스트 URL 예시:
-//  https://www.youtube.com/playlist?list=PLxxxxxxx
-//                                        ↑ 이 부분이 ID
-//
-//  💡 직접 플레이리스트 만드는 방법:
-//  1. YouTube에서 원하는 곡 아무거나 재생
-//  2. "저장" → "새 재생목록 만들기" → 공개 설정
-//  3. 재생목록 URL에서 list= 뒤 값을 여기에 붙여넣기
-//
-//  💡 이미 잘 만들어진 공개 플레이리스트 ID를 아래에 입력하세요
-// ════════════════════════════════════════════════════════════════════
-const MOODS = {
-  calm: {
-    name: '고요', color: '#1e6480',
-    // Lofi Girl - beats to relax/study (공식 채널, 임베드 허용)
-    listId: 'PLdVl0jbmZwkNM8bjAc8jqaiyqCo0PR-71'
-  },
-  happy: {
-    name: '설렘', color: '#bf7030',
-    // Happy Hits playlist
-    listId: 'PLDIoUOhQQPlXr63I_vwF06Dq1EbyqC0Iu'
-  },
-  melancholy: {
-    name: '감성', color: '#5c3d7a',
-    // Sad / Emotional playlist
-    listId: 'PLw-VjHDlEOgs658kAHR_LAaILBXb-s6Q5'
-  },
-  focus: {
-    name: '집중', color: '#2e6b3c',
-    // Lofi Girl - beats to study
-    listId: 'PLofDMZQSAYCBEI8CWVBM_oi7VrYD9I7_S'
-  },
-  romantic: {
-    name: '낭만', color: '#873a5a',
-    // Romantic / Love songs
-    listId: 'PLgzTt0k8mXzEk586ze4BjKATRS9kB93QP'
-  },
-  energy: {
-    name: '에너지', color: '#a8820a',
-    // Workout / Energy
-    listId: 'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI'
+// ── jQuery Knob (minified, inlined from zip) ─────────────────
+(function(e){if(typeof define==="function"&&define.amd){define(["jquery"],e)}else{e(jQuery)}})(function(e){"use strict";var t={},n=Math.max,r=Math.min;t.c={};t.c.d=e(document);t.c.t=function(e){return e.originalEvent.touches.length-1};t.o=function(){var n=this;this.o=null;this.$=null;this.i=null;this.g=null;this.v=null;this.cv=null;this.x=0;this.y=0;this.w=0;this.h=0;this.$c=null;this.c=null;this.t=0;this.isInit=false;this.fgColor=null;this.pColor=null;this.dH=null;this.cH=null;this.eH=null;this.rH=null;this.scale=1;this.relative=false;this.relativeWidth=false;this.relativeHeight=false;this.$div=null;this.run=function(){var t=function(e,t){var r;for(r in t){n.o[r]=t[r]}n._carve().init();n._configure()._draw()};if(this.$.data("kontroled"))return;this.$.data("kontroled",true);this.extend();this.o=e.extend({min:this.$.data("min")!==undefined?this.$.data("min"):0,max:this.$.data("max")!==undefined?this.$.data("max"):100,stopper:true,readOnly:this.$.data("readonly")||this.$.attr("readonly")==="readonly",cursor:this.$.data("cursor")===true&&30||this.$.data("cursor")||0,thickness:this.$.data("thickness")&&Math.max(Math.min(this.$.data("thickness"),1),.01)||.35,lineCap:this.$.data("linecap")||"butt",width:this.$.data("width")||200,height:this.$.data("height")||200,displayInput:this.$.data("displayinput")==null||this.$.data("displayinput"),displayPrevious:this.$.data("displayprevious"),fgColor:this.$.data("fgcolor")||"#87CEEB",inputColor:this.$.data("inputcolor"),font:this.$.data("font")||"Arial",fontWeight:this.$.data("font-weight")||"bold",inline:false,step:this.$.data("step")||1,rotation:this.$.data("rotation"),draw:null,change:null,cancel:null,release:null,format:function(e){return e},parse:function(e){return parseFloat(e)}},this.o);this.o.flip=this.o.rotation==="anticlockwise"||this.o.rotation==="acw";if(!this.o.inputColor){this.o.inputColor=this.o.fgColor}if(this.$.is("fieldset")){this.v={};this.i=this.$.find("input");this.i.each(function(t){var r=e(this);n.i[t]=r;n.v[t]=n.o.parse(r.val());r.bind("change blur",function(){var e={};e[t]=r.val();n.val(n._validate(e))})});this.$.find("legend").remove()}else{this.i=this.$;this.v=this.o.parse(this.$.val());this.v===""&&(this.v=this.o.min);this.$.bind("change blur",function(){n.val(n._validate(n.o.parse(n.$.val())))})}!this.o.displayInput&&this.$.hide();this.$c=e(document.createElement("canvas")).attr({width:this.o.width,height:this.o.height});this.$div=e('<div style="'+(this.o.inline?"display:inline;":"")+"width:"+this.o.width+"px;height:"+this.o.height+"px;"+'"></div>');this.$.wrap(this.$div).before(this.$c);this.$div=this.$.parent();if(typeof G_vmlCanvasManager!=="undefined"){G_vmlCanvasManager.initElement(this.$c[0])}this.c=this.$c[0].getContext?this.$c[0].getContext("2d"):null;if(!this.c){throw{name:"CanvasNotSupportedException",message:"Canvas not supported. Please use excanvas on IE8.0.",toString:function(){return this.name+": "+this.message}}}this.scale=(window.devicePixelRatio||1)/(this.c.webkitBackingStorePixelRatio||this.c.mozBackingStorePixelRatio||this.c.msBackingStorePixelRatio||this.c.oBackingStorePixelRatio||this.c.backingStorePixelRatio||1);this.relativeWidth=this.o.width%1!==0&&this.o.width.indexOf("%");this.relativeHeight=this.o.height%1!==0&&this.o.height.indexOf("%");this.relative=this.relativeWidth||this.relativeHeight;this._carve();if(this.v instanceof Object){this.cv={};this.copy(this.v,this.cv)}else{this.cv=this.v}this.$.bind("configure",t).parent().bind("configure",t);this._listen()._configure()._xy().init();this.isInit=true;this.$.val(this.o.format(this.v));this._draw();return this};this._carve=function(){if(this.relative){var e=this.relativeWidth?this.$div.parent().width()*parseInt(this.o.width)/100:this.$div.parent().width(),t=this.relativeHeight?this.$div.parent().height()*parseInt(this.o.height)/100:this.$div.parent().height();this.w=this.h=Math.min(e,t)}else{this.w=this.o.width;this.h=this.o.height}this.$div.css({width:this.w+"px",height:this.h+"px"});this.$c.attr({width:this.w,height:this.h});if(this.scale!==1){this.$c[0].width=this.$c[0].width*this.scale;this.$c[0].height=this.$c[0].height*this.scale;this.$c.width(this.w);this.$c.height(this.h)}return this};this._draw=function(){var e=true;n.g=n.c;n.clear();n.dH&&(e=n.dH());e!==false&&n.draw()};this._touch=function(e){var r=function(e){var t=n.xy2val(e.originalEvent.touches[n.t].pageX,e.originalEvent.touches[n.t].pageY);if(t==n.cv)return;if(n.cH&&n.cH(t)===false)return;n.change(n._validate(t));n._draw()};this.t=t.c.t(e);r(e);t.c.d.bind("touchmove.k",r).bind("touchend.k",function(){t.c.d.unbind("touchmove.k touchend.k");n.val(n.cv)});return this};this._mouse=function(e){var r=function(e){var t=n.xy2val(e.pageX,e.pageY);if(t==n.cv)return;if(n.cH&&n.cH(t)===false)return;n.change(n._validate(t));n._draw()};r(e);t.c.d.bind("mousemove.k",r).bind("keyup.k",function(e){if(e.keyCode===27){t.c.d.unbind("mouseup.k mousemove.k keyup.k");if(n.eH&&n.eH()===false)return;n.cancel()}}).bind("mouseup.k",function(e){t.c.d.unbind("mousemove.k mouseup.k keyup.k");n.val(n.cv)});return this};this._xy=function(){var e=this.$c.offset();this.x=e.left;this.y=e.top;return this};this._listen=function(){if(!this.o.readOnly){this.$c.bind("mousedown",function(e){e.preventDefault();n._xy()._mouse(e)}).bind("touchstart",function(e){e.preventDefault();n._xy()._touch(e)});this.listen()}else{this.$.attr("readonly","readonly")}if(this.relative){e(window).resize(function(){n._carve().init();n._draw()})}return this};this._configure=function(){if(this.o.draw)this.dH=this.o.draw;if(this.o.change)this.cH=this.o.change;if(this.o.cancel)this.eH=this.o.cancel;if(this.o.release)this.rH=this.o.release;if(this.o.displayPrevious){this.pColor=this.h2rgba(this.o.fgColor,"0.4");this.fgColor=this.h2rgba(this.o.fgColor,"0.6")}else{this.fgColor=this.o.fgColor}return this};this._clear=function(){this.$c[0].width=this.$c[0].width};this._validate=function(e){var t=~~((e<0?-.5:.5)+e/this.o.step)*this.o.step;return Math.round(t*100)/100};this.listen=function(){};this.extend=function(){};this.init=function(){};this.change=function(e){};this.val=function(e){};this.xy2val=function(e,t){};this.draw=function(){};this.clear=function(){this._clear()};this.h2rgba=function(e,t){var n;e=e.substring(1,7);n=[parseInt(e.substring(0,2),16),parseInt(e.substring(2,4),16),parseInt(e.substring(4,6),16)];return"rgba("+n[0]+","+n[1]+","+n[2]+","+t+")"};this.copy=function(e,t){for(var n in e){t[n]=e[n]}}};t.Dial=function(){t.o.call(this);this.startAngle=null;this.xy=null;this.radius=null;this.lineWidth=null;this.cursorExt=null;this.w2=null;this.PI2=2*Math.PI;this.extend=function(){this.o=e.extend({bgColor:this.$.data("bgcolor")||"#EEEEEE",angleOffset:this.$.data("angleoffset")||0,angleArc:this.$.data("anglearc")||360,inline:true},this.o)};this.val=function(e,t){if(null!=e){e=this.o.parse(e);if(t!==false&&e!=this.v&&this.rH&&this.rH(e)===false){return}this.cv=this.o.stopper?n(r(e,this.o.max),this.o.min):e;this.v=this.cv;this.$.val(this.o.format(this.v));this._draw()}else{return this.v}};this.xy2val=function(e,t){var i,s;i=Math.atan2(e-(this.x+this.w2),-(t-this.y-this.w2))-this.angleOffset;if(this.o.flip){i=this.angleArc-i-this.PI2}if(this.angleArc!=this.PI2&&i<0&&i>-.5){i=0}else if(i<0){i+=this.PI2}s=i*(this.o.max-this.o.min)/this.angleArc+this.o.min;this.o.stopper&&(s=n(r(s,this.o.max),this.o.min));return s};this.listen=function(){var t=this,i,s,o=function(e){e.preventDefault();var o=e.originalEvent,u=o.detail||o.wheelDeltaX,a=o.detail||o.wheelDeltaY,f=t._validate(t.o.parse(t.$.val()))+(u>0||a>0?t.o.step:u<0||a<0?-t.o.step:0);f=n(r(f,t.o.max),t.o.min);t.val(f,false);if(t.rH){clearTimeout(i);i=setTimeout(function(){t.rH(f);i=null},100);if(!s){s=setTimeout(function(){if(i)t.rH(f);s=null},200)}}},u,a,f=1,l={37:-t.o.step,38:t.o.step,39:t.o.step,40:-t.o.step};this.$.bind("keydown",function(i){var s=i.keyCode;if(s>=96&&s<=105){s=i.keyCode=s-48}u=parseInt(String.fromCharCode(s));if(isNaN(u)){s!==13&&s!==8&&s!==9&&s!==189&&(s!==190||t.$.val().match(/\./))&&i.preventDefault();if(e.inArray(s,[37,38,39,40])>-1){i.preventDefault();var o=t.o.parse(t.$.val())+l[s]*f;t.o.stopper&&(o=n(r(o,t.o.max),t.o.min));t.change(t._validate(o));t._draw();a=window.setTimeout(function(){f*=2},30)}}}).bind("keyup",function(e){if(isNaN(u)){if(a){window.clearTimeout(a);a=null;f=1;t.val(t.$.val())}}else{t.$.val()>t.o.max&&t.$.val(t.o.max)||t.$.val()<t.o.min&&t.$.val(t.o.min)}});this.$c.bind("mousewheel DOMMouseScroll",o);this.$.bind("mousewheel DOMMouseScroll",o)};this.init=function(){if(this.v<this.o.min||this.v>this.o.max){this.v=this.o.min}this.$.val(this.v);this.w2=this.w/2;this.cursorExt=this.o.cursor/100;this.xy=this.w2*this.scale;this.lineWidth=this.xy*this.o.thickness;this.lineCap=this.o.lineCap;this.radius=this.xy-this.lineWidth/2;this.o.angleOffset&&(this.o.angleOffset=isNaN(this.o.angleOffset)?0:this.o.angleOffset);this.o.angleArc&&(this.o.angleArc=isNaN(this.o.angleArc)?this.PI2:this.o.angleArc);this.angleOffset=this.o.angleOffset*Math.PI/180;this.angleArc=this.o.angleArc*Math.PI/180;this.startAngle=1.5*Math.PI+this.angleOffset;this.endAngle=1.5*Math.PI+this.angleOffset+this.angleArc;var e=n(String(Math.abs(this.o.max)).length,String(Math.abs(this.o.min)).length,2)+2;this.o.displayInput&&this.i.css({width:(this.w/2+4>>0)+"px",height:(this.w/3>>0)+"px",position:"absolute","vertical-align":"middle","margin-top":(this.w/3>>0)+"px","margin-left":"-"+(this.w*3/4+2>>0)+"px",border:0,background:"none",font:this.o.fontWeight+" "+(this.w/e>>0)+"px "+this.o.font,"text-align":"center",color:this.o.inputColor||this.o.fgColor,padding:"0px","-webkit-appearance":"none"})||this.i.css({width:"0px",visibility:"hidden"})};this.change=function(e){this.cv=e;this.$.val(this.o.format(e))};this.angle=function(e){return(e-this.o.min)*this.angleArc/(this.o.max-this.o.min)};this.arc=function(e){var t,n;e=this.angle(e);if(this.o.flip){t=this.endAngle+1e-5;n=t-e-1e-5}else{t=this.startAngle-1e-5;n=t+e+1e-5}this.o.cursor&&(t=n-this.cursorExt)&&(n=n+this.cursorExt);return{s:t,e:n,d:this.o.flip&&!this.o.cursor}};this.draw=function(){var e=this.g,t=this.arc(this.cv),n,r=1;e.lineWidth=this.lineWidth;e.lineCap=this.lineCap;if(this.o.bgColor!=="none"){e.beginPath();e.strokeStyle=this.o.bgColor;e.arc(this.xy,this.xy,this.radius,this.endAngle-1e-5,this.startAngle+1e-5,true);e.stroke()}if(this.o.displayPrevious){n=this.arc(this.v);e.beginPath();e.strokeStyle=this.pColor;e.arc(this.xy,this.xy,this.radius,n.s,n.e,n.d);e.stroke();r=this.cv==this.v}e.beginPath();e.strokeStyle=r?this.o.fgColor:this.fgColor;e.arc(this.xy,this.xy,this.radius,t.s,t.e,t.d);e.stroke()};this.cancel=function(){this.val(this.v)}};e.fn.dial=e.fn.knob=function(n){return this.each(function(){var r=new t.Dial;r.o=n;r.$=e(this);r.run()}).parent()}});
+</script>
+
+<script>
+// ════════════════════════════════════════════════
+//  🎵 무드 데이터
+// ════════════════════════════════════════════════
+const MOODS = [
+  { key:'calm',       icon:'🌊', name:'Calm',   sub:'',       color:'#1e6480', listId:'PLdVl0jbmZwkNM8bjAc8jqaiyqCo0PR-71' },
+  { key:'happy',      icon:'☀️', name:'Joyful',   sub:'',     color:'#bf7030', listId:'PLdVl0jbmZwkOh04su4Y6JBDPfkHn_SoRb' },
+  { key:'melancholy', icon:'🌙', name:'Melancholy',   sub:'', color:'#5c3d7a', listId:'PLw-VjHDlEOgs658kAHR_LAaILBXb-s6Q5' },
+  { key:'focus',      icon:'🌿', name:'Focus',   sub:'',      color:'#2e6b3c', listId:'PLofDMZQSAYCBEI8CWVBM_oi7VrYD9I7_S' },
+  { key:'romantic',   icon:'🌹', name:'Romantic',   sub:'',   color:'#873a5a', listId:'PLdVl0jbmZwkO7QU_DfOAXZqSYMZCsMnuv' },
+  { key:'energy',     icon:'⚡', name:'Energy', sub:'',     color:'#a8820a', listId:'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI' },
+  { key:'gloomy', icon:'🌧️', name:'Gloomy', sub:'', color:'#3a3a5a', listId:'여기에_플레이리스트ID' },
+];
+
+// ── LCD 렌더 ───────────────────────────────────
+let selectedIdx = 0;
+
+function renderLCD() {
+  const menu = document.getElementById('lcdMenu');
+  menu.innerHTML = '';
+  // 보이는 항목: 최대 5개, 선택 항목 기준으로 스크롤
+  const visible = 5;
+  let start = Math.max(0, selectedIdx - 2);
+  let end   = Math.min(MOODS.length, start + visible);
+  if (end - start < visible) start = Math.max(0, end - visible);
+
+  for (let i = start; i < end; i++) {
+    const m   = MOODS[i];
+    const row = document.createElement('div');
+    row.className = 'lcd-row' + (i === selectedIdx ? ' active' : '');
+    row.innerHTML = `
+      <span class="r-icon">${m.icon}</span>
+      <span class="r-name">${m.name}</span>
+      <span class="r-sub">${m.sub}</span>
+      <span class="r-arr">›</span>`;
+    menu.appendChild(row);
   }
-};
+}
+renderLCD();
 
-// ── State ──────────────────────────────────────
-let currentMood = null;
-let ytPlayer    = null;
-let ytReady     = false;
-let isPlaying   = false;
-let infoTimer   = null;
+// clock
+function updateClock() {
+  const d = new Date();
+  document.getElementById('lcdClock').textContent =
+    String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+}
+updateClock();
+setInterval(updateClock, 15000);
 
-// ── YouTube API ────────────────────────────────
-window.onYouTubeIframeAPIReady = () => {
-  ytPlayer = new YT.Player('yt-player', {
-    playerVars: { autoplay:1, controls:1, rel:0, modestbranding:1, iv_load_policy:3 },
-    events: {
-      onReady:       ()  => { ytReady = true; },
-      onStateChange: (e) => onState(e)
+// ── jQuery Knob — infinite iPod wheel ────────────────
+$(function() {
+  var v, up = 0, down = 0;
+
+  $(".ipod-knob").knob({
+    min:          0,
+    max:          20,
+    stopper:      false,
+    cursor:       true,
+    thickness:    0.38,       // ring thickness: 38% → outer ring only, center open
+    width:        210,
+    height:       210,
+    fgColor:      "rgba(160,160,158,0.0)",   // cursor dot: invisible (we use CSS)
+    bgColor:      "rgba(0,0,0,0.0)",         // ring track: transparent
+    displayInput: false,
+    change: function() {
+      if (v > this.cv) {
+        if (up) {
+          moveSelection(-1);
+          up = 0;
+        } else { up = 1; down = 0; }
+      } else if (v < this.cv) {
+        if (down) {
+          moveSelection(+1);
+          down = 0;
+        } else { down = 1; up = 0; }
+      }
+      v = this.cv;
     }
   });
-};
 
-function onState(e) {
-  // 광고 재생 중 (state 3 = buffering in ad) → 광고 안내 표시 후 대기
-  const isAd = ytPlayer.getVideoData && ytPlayer.getVideoData().isPlayable === false;
-  if (e.data === 3 && isAd) {
-    document.getElementById('statusMsg').textContent = '⏳ 광고 재생 중... 곧 음악이 시작돼요';
-    return;
-  }
-  const S = YT.PlayerState;
-  if (e.data === S.PLAYING) { setPlayIcon(true);  startInfoLoop(); }
-  if (e.data === S.PAUSED)  { setPlayIcon(false); stopInfoLoop();  }
-  if (e.data === S.ENDED)   { nextTrack(); }
+  // Make the knob canvas cover the entire wheel shell but pass clicks to center
+  const canvas = $('#knobWrap canvas');
+  canvas.css({
+    position: 'absolute',
+    top: '0', left: '0',
+    width: '210px', height: '210px',
+    opacity: 0,           // fully transparent — interaction only
+    cursor: 'grab'
+  });
+  canvas.css('pointer-events', 'auto');
+
+  // Center button: don't let knob capture its touch/click
+  $('#centerBtn').on('mousedown touchstart', function(e) {
+    e.stopPropagation();
+  });
+});
+
+function moveSelection(dir) {
+  selectedIdx = (selectedIdx + dir + MOODS.length) % MOODS.length;
+  renderLCD();
+  if (navigator.vibrate) navigator.vibrate(6);
 }
 
-// ── 현재 곡 정보 읽기 (0.5초마다) ─────────────
-function startInfoLoop() {
-  stopInfoLoop();
-  updateTrackInfo();
-  infoTimer = setInterval(updateTrackInfo, 1500);
-}
-function stopInfoLoop() { clearInterval(infoTimer); }
+// ── Center button ──────────────────────────────
+document.getElementById('centerBtn').addEventListener('click', function() {
+  const btn = this;
+  btn.classList.add('pressed');
 
-function updateTrackInfo() {
-  if (!ytReady || !ytPlayer.getVideoData) return;
-  const d = ytPlayer.getVideoData();
-  if (!d || !d.title) return;
+  // ripple
+  const ring = document.createElement('div');
+  ring.className = 'ripple-ring';
+  btn.appendChild(ring);
+  setTimeout(() => ring.remove(), 400);
 
-  const title  = d.title  || '';
-  const author = d.author || '';
-  const vid    = d.video_id || '';
+  setTimeout(() => btn.classList.remove('pressed'), 140);
+  if (navigator.vibrate) navigator.vibrate([8, 25, 8]);
+  setTimeout(() => launchPlayer(MOODS[selectedIdx]), 180);
+});
 
-  document.getElementById('tName').textContent   = title  || '—';
-  document.getElementById('tArtist').textContent = author || '—';
+// ── Launch player ──────────────────────────────
+function launchPlayer(mood) {
+  document.getElementById('moodTitle').textContent = mood.name;
+  document.getElementById('moodBadge').textContent = mood.sub;
+  document.getElementById('glow').style.background =
+    `radial-gradient(circle at 50% 30%, ${mood.color} 0%, transparent 68%)`;
+  document.getElementById('playlistLink').href =
+    `https://www.youtube.com/playlist?list=${mood.listId}`;
+  document.getElementById('statusMsg').textContent  = 'Loading...';
+  document.getElementById('tName').textContent      = 'Preparing...';
+  document.getElementById('tArtist').textContent    = '';
 
-  // 현재 영상 YouTube 링크
-  if (vid) {
-    document.getElementById('btnYT').href =
-      `https://www.youtube.com/watch?v=${vid}`;
-  }
-  // Spotify 검색 (곡 제목으로)
-  const q = encodeURIComponent(title);
-  document.getElementById('btnSP').href =
-    `https://open.spotify.com/search/${q}`;
+  document.getElementById('ipod-screen').classList.add('hidden');
+  document.getElementById('player-screen').classList.remove('hidden');
 
-  document.getElementById('statusMsg').textContent = '';
-}
-
-// ── 무드 선택 ──────────────────────────────────
-function pick(mood) {
-  currentMood = mood;
-  const m = MOODS[mood];
-
-  document.getElementById('moodTitle').textContent       = m.name;
-  document.getElementById('glow').style.background      =
-    `radial-gradient(circle at 50% 30%, ${m.color} 0%, transparent 68%)`;
-  document.getElementById('playlistLink').href           =
-    `https://www.youtube.com/playlist?list=${m.listId}`;
-  document.getElementById('statusMsg').textContent       = '로딩 중...';
-  document.getElementById('tName').textContent           = '재생 준비 중...';
-  document.getElementById('tArtist').textContent         = '';
-
-  document.getElementById('intro').classList.add('hidden');
-  document.getElementById('player').classList.remove('hidden');
-
-  loadPlaylist(m.listId);
-}
-
-function loadPlaylist(listId) {
-  const load = () => {
-    ytPlayer.loadPlaylist({
-      listType: 'playlist',
-      list: listId,
-      index: 0,
-      shufflePlaylist: true
-    });
-  };
-
-  if (ytReady) {
-    load();
-  } else {
-    const wait = setInterval(() => {
-      if (ytReady) { clearInterval(wait); load(); }
-    }, 200);
-  }
-}
-
-// ── 컨트롤 ────────────────────────────────────
-function togglePlay() {
-  if (!ytReady) return;
-  if (isPlaying) ytPlayer.pauseVideo();
-  else           ytPlayer.playVideo();
-}
-
-function nextTrack() {
-  if (ytReady) ytPlayer.nextVideo();
-}
-
-function prevTrack() {
-  if (ytReady) ytPlayer.previousVideo();
-}
-
-function setPlayIcon(playing) {
-  isPlaying = playing;
-  document.getElementById('iconPause').style.display = playing ? '' : 'none';
-  document.getElementById('iconPlay').style.display  = playing ? 'none' : '';
+  loadPlaylist(mood.listId);
 }
 
 function goBack() {
   stopInfoLoop();
   if (ytReady) ytPlayer.pauseVideo();
-  document.getElementById('player').classList.add('hidden');
-  setTimeout(() => document.getElementById('intro').classList.remove('hidden'), 100);
+  document.getElementById('player-screen').classList.add('hidden');
+  document.getElementById('ipod-screen').classList.remove('hidden');
 }
 
-// ── YouTube API 로드 ──────────────────────────
+// ════════════════════════════════════════════════
+//  YouTube Player
+// ════════════════════════════════════════════════
+let ytPlayer  = null;
+let ytReady   = false;
+let isPlaying = false;
+let infoTimer = null;
+let shuffled  = false;
+
+window.onYouTubeIframeAPIReady = () => {
+  ytPlayer = new YT.Player('yt-player', {
+    playerVars: { autoplay:1, controls:1, rel:0, modestbranding:1, iv_load_policy:3 },
+    events: {
+      onReady:       () => { ytReady = true; },
+      onStateChange: onYTState
+    }
+  });
+};
+
+function onYTState(e) {
+  const S = YT.PlayerState;
+  if (e.data === S.PLAYING && !shuffled) {
+    shuffled = true;
+    try {
+      ytPlayer.setShuffle(true);
+      ytPlayer.playVideoAt(Math.floor(Math.random() * 30) + 1);
+    } catch(err) {}
+  }
+  if (e.data === S.PLAYING) { setIcon(true);  startInfoLoop(); }
+  if (e.data === S.PAUSED)  { setIcon(false); stopInfoLoop();  }
+  if (e.data === S.ENDED)   { nextTrack(); }
+}
+
+function startInfoLoop() {
+  stopInfoLoop();
+  updateInfo();
+  infoTimer = setInterval(updateInfo, 1500);
+}
+function stopInfoLoop() { clearInterval(infoTimer); }
+
+function updateInfo() {
+  if (!ytReady || !ytPlayer.getVideoData) return;
+  const d = ytPlayer.getVideoData();
+  if (!d || !d.title) return;
+  document.getElementById('tName').textContent    = d.title  || '—';
+  document.getElementById('tArtist').textContent  = d.author || '—';
+  document.getElementById('statusMsg').textContent = '';
+  if (d.video_id) document.getElementById('btnYT').href =
+    `https://www.youtube.com/watch?v=${d.video_id}`;
+  document.getElementById('btnSP').href =
+    `https://open.spotify.com/search/${encodeURIComponent(d.title)}`;
+}
+
+function loadPlaylist(listId) {
+  shuffled = false;
+  const load = () => {
+    ytPlayer.loadPlaylist({ listType:'playlist', list:listId, index:0 });
+  };
+  if (ytReady) load();
+  else {
+    const w = setInterval(() => { if (ytReady) { clearInterval(w); load(); } }, 200);
+  }
+}
+
+function togglePlay() {
+  if (!ytReady) return;
+  if (isPlaying) ytPlayer.pauseVideo();
+  else           ytPlayer.playVideo();
+}
+function nextTrack() { if (ytReady) ytPlayer.nextVideo(); }
+function prevTrack() { if (ytReady) ytPlayer.previousVideo(); }
+function setIcon(p) {
+  isPlaying = p;
+  document.getElementById('iconPause').style.display = p ? '' : 'none';
+  document.getElementById('iconPlay').style.display  = p ? 'none' : '';
+}
+
+// YouTube API
 const s = document.createElement('script');
 s.src = 'https://www.youtube.com/iframe_api';
 document.head.appendChild(s);
