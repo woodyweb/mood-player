@@ -21,9 +21,8 @@ html,body{
 /* ── SVG iPod 크기 ──
    width 숫자 하나만 바꾸면 전체 비례 스케일 */
 #ipod-svg{
-  /* 화면에 맞게 자동 스케일 */
-  width: min(290px, 90vw, 55vh);
-  height: auto;
+  width:min(290px,90vw,55vh);
+  height:auto;
   display:block;
   overflow:visible;
 }
@@ -46,33 +45,57 @@ html,body{
 
 /* 헤더 */
 .lcd-header{
-  background:linear-gradient(180deg,#7090e0 0%,#4060cc 100%);
-  color:#fff;font-size:10px;font-weight:600;letter-spacing:.4px;
+  background:linear-gradient(180deg,#e4e4e4 0%,#d0d0d0 50%,#bcbcbc 100%);
+  color:#222;font-size:10px;font-weight:700;letter-spacing:.3px;
   padding:0 8px;
   display:flex;align-items:center;justify-content:space-between;
   height:18px;position:relative;z-index:2;
-  text-shadow:0 1px 1px rgba(0,0,0,.3);
+  border-bottom:1px solid #a0a0a0;
+  text-shadow:0 1px 0 rgba(255,255,255,.9);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.6);
 }
 .lcd-header .h-title{flex:1;text-align:center;font-size:10.5px}
-.lcd-header .h-icon{font-size:10px;opacity:.9;min-width:14px}
+.lcd-header .h-icon{font-size:10px;min-width:14px;color:#555}
+.lcd-header #hRight{color:#50BFD0;font-size:9px}
 
 /* 뷰 */
 .lcd-view{position:absolute;top:18px;left:0;right:0;bottom:16px;overflow:hidden}
 .lcd-view.hidden{display:none}
 
 /* Now Playing */
-.np-body{display:flex;gap:7px;padding:5px 7px 3px;height:90px;align-items:flex-start}
+.np-body{display:flex;gap:8px;padding:10px 7px 0;height:125px;align-items:flex-start}
 .np-art{
-  width:54px;height:66px;flex-shrink:0;border-radius:3px;
-  display:flex;align-items:center;justify-content:center;
-  position:relative;overflow:hidden;
-  box-shadow:1px 1px 4px rgba(0,0,0,.35);
+  width:80px;height:115px;flex-shrink:0;border-radius:0;
+  display:flex;align-items:flex-start;justify-content:center;
+  position:relative;overflow:visible;
+  box-shadow:none;
   transition:background .5s ease;
 }
-.np-art-icon{position:relative;z-index:1;font-size:22px;line-height:1}
-.np-art-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2;opacity:0;transition:opacity .4s ease;}
+/* 실제 이미지 영역 80x80 */
+.np-art-main{
+  position:absolute;top:0;left:0;width:80px;height:80px;
+  overflow:hidden;border-radius:0;
+  background:inherit;
+}
+/* 반사 영역 */
+.np-art-reflect{
+  position:absolute;top:80px;left:0;width:80px;height:35px;
+  overflow:hidden;
+  transform:scaleY(-1);
+  -webkit-mask-image:linear-gradient(to bottom,rgba(0,0,0,0.45) 0%,transparent 100%);
+  mask-image:linear-gradient(to bottom,rgba(0,0,0,0.45) 0%,transparent 100%);
+}
+.np-art-reflect-inner{
+  width:80px;height:80px;
+  background:inherit;
+  position:relative;
+}
+.np-art-icon{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1;font-size:22px;line-height:1}
+.np-art-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:0;z-index:2;opacity:0;transition:opacity .4s ease;}
 .np-art-img.loaded{opacity:1}
-.np-art-shine{position:absolute;top:0;left:0;right:0;height:45%;background:linear-gradient(180deg,rgba(255,255,255,.22) 0%,transparent 100%);pointer-events:none;z-index:3;}
+.np-art-reflect-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:0;z-index:2;opacity:0;transition:opacity .4s ease;}
+.np-art-reflect-img.loaded{opacity:1}
+.np-art-shine{display:none;}
 .np-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;padding-top:2px}
 .np-title{font-size:10px;font-weight:600;color:#182818;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;}
 .np-artist{font-size:9px;color:#4a5a4a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -89,17 +112,20 @@ html,body{
 .np-bar.paused{animation:none;height:3px!important}
 @keyframes bar-bounce{0%,100%{transform:scaleY(.4)}50%{transform:scaleY(1)}}
 
-.np-prog-row{display:flex;align-items:center;gap:4px;padding:0 7px;height:20px}
+.np-prog-row{display:flex;align-items:center;gap:4px;padding:0 7px;height:20px;margin-top:4px}
 .prog-time{font-size:7.5px;color:#4a6a4a;font-family:monospace;flex-shrink:0;min-width:26px}
 .prog-time:last-child{text-align:right}
-.prog-track{flex:1;height:3px;background:rgba(0,0,0,.15);border-radius:2px;overflow:hidden}
-.prog-fill{height:100%;background:#4060cc;border-radius:2px;transition:width .6s linear;width:0%}
+.prog-track{flex:1;height:6px;background:linear-gradient(180deg,#c0c0c0,#d8d8d8);border-radius:3px;border:1px solid #aaa;overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.15)}
+.prog-fill{height:100%;background:linear-gradient(180deg,#7ec8f0,#3a88e0);border-radius:3px;transition:width .6s linear;width:0%;box-shadow:inset 0 1px 0 rgba(255,255,255,.4)}
 
 /* 트랙 캐러셀 */
-.albums-scene{height:92px;position:relative;display:flex;align-items:center;justify-content:center;perspective:250px;overflow:visible;}
-.album-card{position:absolute;width:54px;height:66px;border-radius:3px;display:flex;align-items:center;justify-content:center;transform-style:preserve-3d;overflow:hidden;box-shadow:2px 4px 10px rgba(0,0,0,.4);}
-.album-card-shine{position:absolute;top:0;left:0;right:0;height:40%;background:linear-gradient(180deg,rgba(255,255,255,.25) 0%,transparent 100%);pointer-events:none;z-index:4;}
-.card-thumb{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:3;opacity:0;transition:opacity .35s ease;}
+.albums-scene{height:117px;position:relative;display:flex;align-items:center;justify-content:center;perspective:280px;overflow:visible;}
+.album-card{position:absolute;width:80px;height:115px;border-radius:0;display:flex;align-items:flex-start;justify-content:center;transform-style:preserve-3d;overflow:visible;box-shadow:none;}
+.album-card-main{position:absolute;top:0;left:0;width:80px;height:80px;overflow:hidden;border-radius:0;background:inherit;}
+.album-card-reflect{position:absolute;top:80px;left:0;width:80px;height:35px;overflow:hidden;transform:scaleY(-1);-webkit-mask-image:linear-gradient(to bottom,rgba(0,0,0,0.4) 0%,transparent 100%);mask-image:linear-gradient(to bottom,rgba(0,0,0,0.4) 0%,transparent 100%);}
+.album-card-reflect-inner{width:80px;height:80px;background:inherit;position:relative;}
+.album-card-shine{display:none;}
+.card-thumb{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:0;z-index:3;opacity:0;transition:opacity .35s ease;}
 .card-thumb.loaded{opacity:1}
 .albums-name{text-align:center;font-size:10px;font-weight:500;color:#2a3a2a;padding:2px 8px;height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
@@ -131,8 +157,7 @@ html,body{
 
 <svg id="ipod-svg" viewBox="185 5 288 482"
      xmlns="http://www.w3.org/2000/svg"
-     xmlns:xlink="http://www.w3.org/1999/xlink"
-     preserveAspectRatio="xMidYMid meet">
+     xmlns:xlink="http://www.w3.org/1999/xlink">
 
   <style type="text/css">
 
@@ -809,9 +834,15 @@ uNxuNxv+S5iTfI+J1Gy3om5iTfI+J1Gy3om5iTfI+P/Z" transform="matrix(0.24 0 0 0.24 18
       <div class="lcd-view" id="view-nowplaying">
         <div class="np-body">
           <div class="np-art" id="npArt">
-            <span class="np-art-icon" id="npIcon">&#9835;</span>
-            <img class="np-art-img" id="npArtImg" src="" alt="">
-            <div class="np-art-shine"></div>
+            <div class="np-art-main" id="npArtMain">
+              <span class="np-art-icon" id="npIcon">&#9835;</span>
+              <img class="np-art-img" id="npArtImg" src="" alt="">
+            </div>
+            <div class="np-art-reflect">
+              <div class="np-art-reflect-inner" id="npArtReflectInner">
+                <img class="np-art-reflect-img" id="npArtReflectImg" src="" alt="">
+              </div>
+            </div>
           </div>
           <div class="np-info">
             <div class="np-title" id="npTitle">Tap &#9654; to play</div>
@@ -920,7 +951,17 @@ function buildTrackCards(){
     const card=document.createElement('div');
     card.className='album-card'; card.id='tcard-'+i;
     card.style.background=`linear-gradient(145deg,${trackColorLight(i)},${trackColor(i)})`;
-    card.innerHTML=`<div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><span style="font-size:18px;line-height:1">♪</span><span id="tcard-num-${i}" style="font-size:8px;color:rgba(255,255,255,.85);font-family:monospace;font-weight:600">${i+1}</span></div><div class="album-card-shine"></div>`;
+    const bg=`linear-gradient(145deg,${trackColorLight(i)},${trackColor(i)})`;
+    card.style.background='transparent';
+    card.innerHTML=`
+      <div class="album-card-main" id="tcard-main-${i}" style="background:${bg}">
+        <img class="card-thumb" id="cthumb-${i}" src="" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .35s;">
+      </div>
+      <div class="album-card-reflect">
+        <div class="album-card-reflect-inner" id="tcard-rinner-${i}" style="background:${bg}">
+          <img id="cthumb-ref-${i}" src="" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .35s;">
+        </div>
+      </div>`;
     scene.appendChild(card);
   }
   loadAllCardThumbs();
@@ -935,7 +976,7 @@ function positionCards(angle){
     let off=i-angle; off=off-N*Math.round(off/N);
     const abs=Math.abs(off);
     if(abs>2.6){card.style.opacity='0';card.style.zIndex='0';continue;}
-    const tx=off*62,tz=25*Math.max(0,1-abs),ry=-off*28;
+    const tx=off*88,tz=20*Math.max(0,1-abs),ry=-off*22;
     const sc=Math.max(0.6,1-abs*0.15),op=Math.max(0,1-abs*0.28);
     card.style.transform=`translateX(${tx}px) translateZ(${tz}px) rotateY(${ry}deg) scale(${sc})`;
     card.style.opacity=op; card.style.zIndex=Math.round(5-abs*2);
@@ -984,20 +1025,35 @@ function updateTrackCardTitle(idx,title){
 function thumbUrl(id,q){return `https://img.youtube.com/vi/${id}/${q||'mqdefault'}.jpg`;}
 function setNPThumb(vid){
   const img=document.getElementById('npArtImg');
-  if(!vid){img.classList.remove('loaded');return;}
+  const rimg=document.getElementById('npArtReflectImg');
+  if(!vid){img.classList.remove('loaded');if(rimg)rimg.classList.remove('loaded');return;}
   if(img.dataset.vid===vid) return;
+  const url=thumbUrl(vid,'mqdefault');
   img.dataset.vid=vid;
   img.onload=()=>img.classList.add('loaded');
   img.onerror=()=>img.classList.remove('loaded');
-  img.src=thumbUrl(vid,'mqdefault');
+  img.src=url;
+  if(rimg){
+    rimg.dataset.vid=vid;
+    rimg.onload=()=>rimg.classList.add('loaded');
+    rimg.src=url;
+  }
 }
 function setCardThumb(ci,vid){
   if(!vid) return;
-  const card=document.getElementById('tcard-'+ci); if(!card) return;
-  let img=card.querySelector('.card-thumb');
-  if(!img){img=document.createElement('img');img.className='card-thumb';img.onload=()=>img.classList.add('loaded');img.onerror=()=>{};card.appendChild(img);}
-  if(img.dataset.vid===vid) return;
-  img.dataset.vid=vid; img.src=thumbUrl(vid,'default');
+  const url=thumbUrl(vid,'default');
+  const img=document.getElementById('cthumb-'+ci);
+  if(img&&img.dataset.vid!==vid){
+    img.dataset.vid=vid;
+    img.onload=()=>{img.style.opacity=1;};
+    img.src=url;
+  }
+  const rimg=document.getElementById('cthumb-ref-'+ci);
+  if(rimg&&rimg.dataset.vid!==vid){
+    rimg.dataset.vid=vid;
+    rimg.onload=()=>{rimg.style.opacity=1;};
+    rimg.src=url;
+  }
 }
 function loadAllCardThumbs(){
   if(!ytReady) return;
@@ -1009,10 +1065,17 @@ function loadAllCardThumbs(){
 // NOW PLAYING ART
 // ════════════════════════════════
 function updateNPArt(idx){
-  document.getElementById('npArt').style.background=`linear-gradient(145deg,${trackColorLight(idx)},${trackColor(idx)})`;
+  const bg=`linear-gradient(145deg,${trackColorLight(idx)},${trackColor(idx)})`;
+  const main=document.getElementById('npArtMain');
+  const ref=document.getElementById('npArtReflectInner');
+  if(main) main.style.background=bg;
+  if(ref)  ref.style.background=bg;
+  document.getElementById('npArt').style.background='transparent';
   document.getElementById('npIcon').textContent='♪';
   const img=document.getElementById('npArtImg');
   img.classList.remove('loaded'); img.dataset.vid='';
+  const rimg=document.getElementById('npArtReflectImg');
+  if(rimg){rimg.classList.remove('loaded'); rimg.src='';}
 }
 
 // ════════════════════════════════
@@ -1220,24 +1283,15 @@ _s.src='https://www.youtube.com/iframe_api';
 document.head.appendChild(_s);
 
 
-// ── iOS Safari foreignObject 버그 수정 ──
-// foreignObject는 SVG의 CSS width가 아닌 width 속성 기준으로 렌더링됨
-// → CSS 실제 렌더 크기를 읽어서 SVG width/height 속성에 직접 반영
-function fixIOSForeignObject() {
-  const svg = document.getElementById('ipod-svg');
-  if (!svg) return;
-  const rect = svg.getBoundingClientRect();
-  if (rect.width > 0) {
-    svg.setAttribute('width', rect.width);
-    svg.setAttribute('height', rect.height);
-  }
+// iOS Safari: SVG width 속성 동기화 (foreignObject 위치 버그 수정)
+function fixIOSForeignObject(){
+  const svg=document.getElementById('ipod-svg');
+  if(!svg) return;
+  const r=svg.getBoundingClientRect();
+  if(r.width>0){svg.setAttribute('width',r.width);svg.setAttribute('height',r.height);}
 }
-// 렌더링 후 + 리사이즈 때 실행
-window.addEventListener('resize', fixIOSForeignObject);
-requestAnimationFrame(() => {
-  fixIOSForeignObject();
-  requestAnimationFrame(fixIOSForeignObject);
-});
+window.addEventListener('resize',fixIOSForeignObject);
+requestAnimationFrame(()=>{fixIOSForeignObject();requestAnimationFrame(fixIOSForeignObject);});
 
 // 초기화
 updateNPArt(0);
