@@ -1067,20 +1067,18 @@ function updateTrackCardTitle(idx,title){
 // ════════════════════════════════
 function thumbUrl(id,q){return `https://img.youtube.com/vi/${id}/${q||'mqdefault'}.jpg`;}
 function setNPThumb(vid){
-  const img=document.getElementById('npArtImg');
-  const rimg=document.getElementById('npArtReflectImg');
-  if(!vid){img.classList.remove('loaded');if(rimg)rimg.classList.remove('loaded');return;}
-  if(img.dataset.vid===vid) return;
-  const url=thumbUrl(vid,'mqdefault');
-  img.dataset.vid=vid;
-  img.onload=()=>img.classList.add('loaded');
-  img.onerror=()=>img.classList.remove('loaded');
-  img.src=url;
-  if(rimg){
-    rimg.dataset.vid=vid;
-    rimg.onload=()=>rimg.classList.add('loaded');
-    rimg.src=url;
-  }
+    const img = document.getElementById('npArtImg');
+    const rimg = document.getElementById('npArtReflectImg');
+    if (!vid) return;
+
+    const url = thumbUrl(vid, 'mqdefault'); // 혹은 속도를 위해 'default'로 통일 가능
+  
+    // 메인과 미러를 동시에 할당
+    img.src = url;
+    if (rimg) rimg.src = url;
+
+    img.onload = () => img.classList.add('loaded');
+    if (rimg) rimg.onload = () => rimg.classList.add('loaded');
 }
 function setCardThumb(ci,vid){
   if(!vid) return;
@@ -1339,7 +1337,12 @@ function setPlay(p){
   if(appState==='nowplaying') document.getElementById('hRight').textContent=p?'❚❚':'▶';
 }
 
-function startTimers(){stopTimers();updateInfo();infoTimer=setInterval(updateInfo,1800);progTimer=setInterval(updateProg,800);}
+function startTimers(){
+    stopTimers();
+    updateInfo();
+    infoTimer=setInterval(updateInfo,1800);
+    progTimer=setInterval(updateProg,800);
+}
 function stopTimers(){clearInterval(infoTimer);clearInterval(progTimer);}
 
 function updateInfo(){
