@@ -1242,31 +1242,31 @@ let ytPlayer=null,ytReady=false,infoTimer=null,progTimer=null,shuffled=false;
 
 window.onYouTubeIframeAPIReady=()=>{
   ytPlayer=new YT.Player('yt-player',{
-    playerVars:{autoplay:0,controls:0,rel:0,modestbranding:1,iv_load_policy:3,playsinline:1},
-    events:{
-    onReady:()=>{
-      ytReady=true;
-      try{ytPlayer.setVolume(volume);ytPlayer.unMute();}catch(_){}
-      try{
-        ytPlayer.loadPlaylist({listType:'playlist',list:PLAYLIST_ID,index:0});
-        // 플레이리스트 로드 후 곡 수 파악해서 랜덤 이동
-        setTimeout(()=>{
-          const total = ytPlayer.getPlaylist()?.length || 1;
-          const randIdx = Math.floor(Math.random() * total);
-          ytPlayer.playVideoAt(randIdx);
-        }, 1500);
-      }catch(_){}
-    },
-      onStateChange:onYTState
-    }
-  });
-};
+      playerVars:{autoplay:1,controls:0,rel:0,modestbranding:1,iv_load_policy:3,playsinline:1},
+      events:{
+         onReady:()=>{
+             ytReady=true;
+             try{ytPlayer.mute();}catch(_){}  // 일단 음소거로 시작
+             try{ytPlayer.setVolume(volume);}catch(_){}
+             try{ytPlayer.loadPlaylist({listType:'playlist',list:PLAYLIST_ID,index:0});}catch(_){}
+           },
+           onStateChange:onYTState
+         }
+           });
+         };
 
 function onYTState(e){
   const S=YT.PlayerState;
   if(e.data===S.PLAYING&&!shuffled){
-    shuffled=true;ensureTrackSlots();trackCount=tracks.length||20;
-    try{ytPlayer.setShuffle(false);}catch(_){}
+    shuffled=true; ensureTrackSlots(); trackCount=tracks.length||20;
+    try{
+      const total = ytPlayer.getPlaylist()?.length || 20;
+      const randIdx = Math.floor(Math.random() * total);
+      ytPlayer.playVideoAt(randIdx);  // 랜덤 곡으로 점프
+      ytPlayer.unMute();              // 음소거 해제
+      ytPlayer.setVolume(volume);
+      ytPlayer.setShuffle(true);
+    }catch(_){}
     setTimeout(loadAllCardThumbs,400);
   }
   if(e.data===S.PLAYING) {setPlay(true);startTimers();updateCurrentIdx();applyVolume();}
