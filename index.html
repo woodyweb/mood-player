@@ -1242,19 +1242,18 @@ let ytPlayer=null,ytReady=false,infoTimer=null,progTimer=null,shuffled=false;
 
 window.onYouTubeIframeAPIReady=()=>{
   ytPlayer=new YT.Player('yt-player',{
-    playerVars:{autoplay:1,controls:0,rel:0,modestbranding:1,iv_load_policy:3,playsinline:1},
+    playerVars:{autoplay:0,controls:0,rel:0,modestbranding:1,iv_load_policy:3,playsinline:1},
     events:{
       onReady:()=>{
-          ytReady=true;
-          try{ytPlayer.setVolume(volume);ytPlayer.unMute();}catch(_){}
-          try{
-              ytPlayer.loadPlaylist({listType:'playlist',list:PLAYLIST_ID,index:0});
-              // 플레이리스트 로드 후 곡 수 파악해서 랜덤 이동
-              setTimeout(()=>{
-                const total = ytPlayer.getPlaylist()?.length || 1;
-                const randIdx = Math.floor(Math.random() * total);
-                ytPlayer.playVideoAt(randIdx);
-            }, 1500);
+        ytReady=true;
+        try{ytPlayer.setVolume(volume);ytPlayer.unMute();}catch(_){}
+        try{
+          ytPlayer.loadPlaylist({listType:'playlist',list:PLAYLIST_ID,index:0});
+          setTimeout(()=>{
+            const total = ytPlayer.getPlaylist()?.length || 1;
+            const randIdx = Math.floor(Math.random() * total);
+            ytPlayer.playVideoAt(randIdx); // 이때 재생 시작
+          }, 1500);
         }catch(_){}
       },
       onStateChange:onYTState
