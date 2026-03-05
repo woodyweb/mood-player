@@ -1250,39 +1250,80 @@ function fireZone(x, y){
 // ════════════════════════════════
 let ytPlayer=null,ytReady=false,infoTimer=null,progTimer=null,shuffled=false;
 
-window.onYouTubeIframeAPIReady=()=>{
-  ytPlayer=new YT.Player('yt-player',{
-      playerVars:{autoplay:1,controls:0,rel:0,modestbranding:1,iv_load_policy:3,playsinline:1},
-      events:{
-         onReady:()=>{
-             ytReady=true;
-             try{ytPlayer.mute();}catch(_){}  // 일단 음소거로 시작
-             try{ytPlayer.setVolume(volume);}catch(_){}
-             try{ytPlayer.loadPlaylist({listType:'playlist',list:PLAYLIST_ID,index:0});}catch(_){}
-           },
-           onStateChange:onYTState
-         }
-           });
-         };
+window.onYouTubeIframeAPIReady = () => {
+  ytPlayer = new YT.Player('yt-player', {
+    playerVars: {
+      autoplay: 1,
+      controls: 0,
+      rel: 0,
+      modestbranding: 1,
+      iv_load_policy: 3,
+      playsinline: 1,
+      mute: 1 // 자동 재생을 위해 음소거 필수
+    },
+    events: {
+      onReady: (event) => {
+        ytReady = true;
+        // 1. 목록을 바로 재생하지 않고 '대기(cue)' 상태로 로드합니다.
+        event.target.cuePlaylist({
+          listType: 'playlist',
+          list: PLAYLIST_ID
+        });
+      },
+      onStateChange: onYTState,
+      // 2. 오류 발생 시 로그를 확인하고 다음 곡으로 안전하게 넘깁니다.
+      onError: (e) => {
+        console.log("YouTube Error:", e.data);
+        nextTrack();
+      }
+    }
+  });
+};
 
-function onYTState(e){
-  const S=YT.PlayerState;
-  if(e.data===S.PLAYING&&!shuffled){
-    shuffled=true; ensureTrackSlots(); trackCount=tracks.length||20;
-    try{
-      const total = ytPlayer.getPlaylist()?.length || 20;
-      const randIdx = Math.floor(Math.random() * total);
-      ytPlayer.playVideoAt(randIdx);  // 랜덤 곡으로 점프
-      ytPlayer.unMute();              // 음소거 해제
-      ytPlayer.setVolume(volume);
-      ytPlayer.setShuffle(true);
-    }catch(_){}
-    setTimeout(loadAllCardThumbs,400);
+function onYTState(e) {
+  const S = YT.PlayerState;
+
+  // 1. 목록 로드 완료 시 (최초 1회 설정)
+  if (e.data === S.CUED) {
+    const playlist = ytPlayer.getPlaylist();
+    if (playlist && playlist.length > 0) {
+      const randIdx = Math.floor(Math.random() * playlist.length);
+      ytPlayer.setShuffle(true); 
+      setTimeout(() => {
+        ytPlayer.playVideoAt(randIdx);
+      }, 200);
+    }
   }
-  if(e.data===S.PLAYING) {setPlay(true);startTimers();updateCurrentIdx();applyVolume();}
-  if(e.data===S.PAUSED)  {setPlay(false);stopTimers();}
-  if(e.data===S.ENDED)   {nextTrack();}
-  if(e.data===S.BUFFERING){document.getElementById('npTitle').textContent='Loading...';}
+
+  // 2. 재생 중일 때 (UI 업데이트 전용)
+  if (e.data === S.PLAYING) {
+    if (!shuffled) {
+      shuffled = true;
+      ensureTrackSlots();
+      setTimeout(loadAllCardThumbs, 400);
+    }
+    setPlay(true);
+    startTimers();
+    updateCurrentIdx(); // 여기서 현재 곡 번호를 가져와 LCD와 캐러셀을 맞춤
+    applyVolume();
+  }
+
+  // 3. 일시정지 시
+  if (e.data === S.PAUSED) { 
+    setPlay(false); 
+    stopTimers(); 
+  }
+
+  // 4. 곡이 끝났을 때 (nextTrack 삭제!)
+  if (e.data === S.ENDED) {
+    // 아무것도 하지 않아도 YouTube가 다음 곡을 재생합니다.
+    // 재생이 시작되면 위쪽 S.PLAYING 로직이 실행되면서 UI가 갱신됩니다.
+  }
+
+  // 5. 로딩 중 피드백
+  if (e.data === S.BUFFERING) {
+    document.getElementById('npTitle').textContent = 'Loading...';
+  }
 }
 
 function applyVolume(){if(!ytReady)return;try{ytPlayer.setVolume(volume);}catch(_){}try{ytPlayer.unMute();}catch(_){}}
