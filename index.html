@@ -111,7 +111,16 @@ html,body{
 .np-art-icon{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1;font-size:22px;line-height:1}
 .np-art-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:0;z-index:2;opacity:0;transition:opacity .4s ease;}
 .np-art-img.loaded{opacity:1}
-.np-art-reflect-img{display:none;}
+.np-art-reflect-img{
+  display:block;
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  opacity:0;
+  transition:opacity .4s ease;
+}
 .np-art-shine{display:none;}
 .np-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;padding-top:2px}
 .np-title{font-size:10px;font-weight:600;color:#182818;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;}
