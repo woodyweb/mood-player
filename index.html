@@ -84,7 +84,9 @@ html,body{
 .np-art{
   width:80px;height:80px;flex-shrink:0;border-radius:0;
   display:flex;align-items:center;justify-content:center;
-  position:relative;overflow:hidden;
+  position:relative;
+  overflow:visible;
+  transform: perspective(200px) rotateY(15deg);
   box-shadow:none;
   transition:background .5s ease;
 }
@@ -92,8 +94,20 @@ html,body{
   position:absolute;inset:0;overflow:hidden;border-radius:0;
   background:inherit;
 }
-.np-art-reflect{display:none;}
-.np-art-reflect-inner{display:none;}
+.np-art-reflect{
+  display:block;
+  position:absolute;
+  top:75%;
+  left:0; width:100%; height:100%;
+  transform:scaleY(-1);
+  -webkit-mask-image:linear-gradient(to top, rgba(0,0,0,0.15) 0%, transparent 50%);
+  mask-image:linear-gradient(to top, rgba(0,0,0,0.15) 0%, transparent 50%);
+  pointer-events:none;
+}
+.np-art-reflect-inner{
+  display:block;
+  position:absolute;inset:0;overflow:hidden;
+}
 .np-art-icon{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1;font-size:22px;line-height:1}
 .np-art-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:0;z-index:2;opacity:0;transition:opacity .4s ease;}
 .np-art-img.loaded{opacity:1}
@@ -123,16 +137,16 @@ html,body{
 
 /* 트랙 캐러셀 */
 .albums-scene{height:120px;position:relative;display:flex;align-items:center;justify-content:center;perspective:110px;overflow:visible;}
-.album-card{position:absolute;width:80px;height:80px;border-radius:0;display:flex;align-items:center;justify-content:center;transform-style:preserve-3d;overflow:hidden;box-shadow:none;}
+.album-card{position:absolute;width:80px;height:80px;border-radius:0;display:flex;align-items:center;justify-content:center;transform-style:preserve-3d;overflow:visible;box-shadow:none;}
 .album-card-main{position:absolute;inset:0;overflow:hidden;border-radius:0;background:inherit;}
 .album-card-reflect{
   display:block;
   position:absolute;
-  top:100%;          /* 카드 바로 아래 */
+  top:75%;          /* 카드 바로 아래 */
   left:0; width:100%; height:100%;
   transform:scaleY(-1);           /* 상하 반전 */
-  -webkit-mask-image:linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, transparent 70%);
-  mask-image:linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, transparent 70%);
+  -webkit-mask-image:linear-gradient(to top, rgba(0,0,0,0.15) 0%, transparent 70%);
+  mask-image:linear-gradient(to top, rgba(0,0,0,0.15) 0%, transparent 70%);
   pointer-events:none;
 }
 .album-card-reflect-inner{
