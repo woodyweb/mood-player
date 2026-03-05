@@ -1073,14 +1073,17 @@ function setNPThumb(vid){
   if(img.dataset.vid===vid) return;
   const url=thumbUrl(vid,'mqdefault');
   img.dataset.vid=vid;
-  img.onload=()=>img.classList.add('loaded');
+  img.onload=()=>{
+    img.classList.add('loaded');
+    // 메인 로드 완료 후 → 이미 캐시에 있어서 reflect는 즉시 표시
+    if(rimg){
+      rimg.src=url;
+      rimg.onload=()=>rimg.classList.add('loaded');
+    }
+  };
   img.onerror=()=>img.classList.remove('loaded');
   img.src=url;
-  if(rimg){
-    rimg.dataset.vid=vid;
-    rimg.onload=()=>rimg.classList.add('loaded');
-    rimg.src=url;
-  }
+}
 }
 function setCardThumb(ci,vid){
   if(!vid) return;
