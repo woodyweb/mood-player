@@ -1242,18 +1242,21 @@ let ytPlayer=null,ytReady=false,infoTimer=null,progTimer=null,shuffled=false;
 
 window.onYouTubeIframeAPIReady=()=>{
   ytPlayer=new YT.Player('yt-player',{
-    playerVars:{autoplay:0,controls:0,rel:0,modestbranding:1,iv_load_policy:3,playsinline:1},
+    playerVars:{autoplay:1,controls:0,rel:0,modestbranding:1,iv_load_policy:3,playsinline:1},
     events:{
       onReady:()=>{
         ytReady=true;
-        try{ytPlayer.setVolume(volume);ytPlayer.unMute();}catch(_){}
         try{
+          ytPlayer.mute(); // 먼저 음소거
+          ytPlayer.setVolume(volume);
           ytPlayer.loadPlaylist({listType:'playlist',list:PLAYLIST_ID,index:0});
           setTimeout(()=>{
             const total = ytPlayer.getPlaylist()?.length || 1;
             const randIdx = Math.floor(Math.random() * total);
-            ytPlayer.playVideoAt(randIdx); // 이때 재생 시작
-          }, 1500);
+            ytPlayer.playVideoAt(randIdx);
+            ytPlayer.unMute(); // 랜덤 곡으로 이동 후 음소거 해제
+            ytPlayer.setVolume(volume);
+          }, 1000);
         }catch(_){}
       },
       onStateChange:onYTState
