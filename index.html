@@ -115,11 +115,11 @@ html,body{
 .np-bar.paused{animation:none;height:3px!important}
 @keyframes bar-bounce{0%,100%{transform:scaleY(.4)}50%{transform:scaleY(1)}}
 
-.np-prog-row{display:flex;align-items:center;gap:1px;padding:0 15px;height:20px;margin-top:4px}
+.np-prog-row{display:flex;align-items:center;gap:2px;padding:0 15px;height:20px;margin-top:4px}
 .prog-time{font-size:9px;color:#4a6a4a;font-family:monospace;font-weight:bold;flex-shrink:0;min-width:26px}
 .prog-time:last-child{text-align:right}
-.prog-track{flex:1;height:12px;background:linear-gradient(180deg,#e8e8e8,#f0f0f0);border-radius:0px;border:1px solid #aaa;overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.15)}
-.prog-fill{height:100%;background:linear-gradient(180deg,#ade9ff,#53bde5);border-radius:0px;transition:width .6s linear;width:0%;box-shadow:inset 0 1px 0 rgba(255,255,255,.4)}
+.prog-track{flex:1;height:12px;background:linear-gradient(180deg,#e8e8e8,#ffffff,#efefef,#e8e8e8);border-radius:0px;border:0px solid #aaa;overflow:hidden;box-shadow:inset 0 0px 1px rgba(0,0,0,.15)}
+.prog-fill{height:100%;background:linear-gradient(180deg,#91a3cf,#83a3d4,#6a96ca,#91a3cf);border-radius:0px;transition:width .6s linear;width:0%;box-shadow:inset 0 1px 0 rgba(255,255,255,.4)}
 
 /* 트랙 캐러셀 */
 .albums-scene{height:120px;position:relative;display:flex;align-items:center;justify-content:center;perspective:280px;overflow:visible;}
