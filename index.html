@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Mood Player</title>
+<title>RetroPod</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <style>
@@ -119,14 +119,26 @@ html,body{
 .prog-time{font-size:9px;color:#4a6a4a;font-family:monospace;font-weight:bold;flex-shrink:0;min-width:26px}
 .prog-time:last-child{text-align:right}
 .prog-track{flex:1;height:12px;background:linear-gradient(180deg,#e8e8e8,#ffffff,#efefef,#e8e8e8);border-radius:0px;border:0px solid #aaa;overflow:hidden;box-shadow:inset 0 0px 1px rgba(0,0,0,.15)}
-.prog-fill{height:100%;background:linear-gradient(180deg,#91a3cf,#83a3d4,#6a96ca,#91a3cf);border-radius:0px;transition:width .6s linear;width:0%;box-shadow:inset 0 1px 0 rgba(255,255,255,.4)}
+.prog-fill{height:100%;background:linear-gradient(180deg,#91a3cf,#83a3d4,#6a96ca,#7fbae7);border-radius:0px;transition:width .6s linear;width:0%;box-shadow:inset 0 1px 0 rgba(255,255,255,.4)}
 
 /* 트랙 캐러셀 */
-.albums-scene{height:120px;position:relative;display:flex;align-items:center;justify-content:center;perspective:280px;overflow:visible;}
+.albums-scene{height:120px;position:relative;display:flex;align-items:center;justify-content:center;perspective:110px;overflow:visible;}
 .album-card{position:absolute;width:80px;height:80px;border-radius:0;display:flex;align-items:center;justify-content:center;transform-style:preserve-3d;overflow:hidden;box-shadow:none;}
 .album-card-main{position:absolute;inset:0;overflow:hidden;border-radius:0;background:inherit;}
-.album-card-reflect{display:none;}
-.album-card-reflect-inner{display:none;}
+.album-card-reflect{
+  display:block;
+  position:absolute;
+  top:100%;          /* 카드 바로 아래 */
+  left:0; width:100%; height:100%;
+  transform:scaleY(-1);           /* 상하 반전 */
+  -webkit-mask-image:linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, transparent 70%);
+  mask-image:linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, transparent 70%);
+  pointer-events:none;
+}
+.album-card-reflect-inner{
+  display:block;
+  position:absolute;inset:0;overflow:hidden;
+}
 .album-card-shine{display:none;}
 .card-thumb{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:0;z-index:3;opacity:0;transition:opacity .35s ease;}
 .card-thumb.loaded{opacity:1}
@@ -983,8 +995,8 @@ function positionCards(angle){
     let off=i-angle; off=off-N*Math.round(off/N);
     const abs=Math.abs(off);
     if(abs>2.6){card.style.opacity='0';card.style.zIndex='0';continue;}
-    const tx=off*88,tz=20*Math.max(0,1-abs),ry=-off*22;
-    const sc=Math.max(0.6,1-abs*0.15),op=Math.max(0,1-abs*0.28);
+    const tx=off*50,tz=3*Math.max(0,1-abs),ry=-off*30;
+    const sc=Math.max(0.3,1-abs*0.12),op=Math.max(0,1-abs*0.0);
     card.style.transform=`translateX(${tx}px) translateZ(${tz}px) rotateY(${ry}deg) scale(${sc})`;
     card.style.opacity=op; card.style.zIndex=Math.round(5-abs*2);
     card.style.outline=(i===currentIdx)?'2px solid rgba(255,240,140,.7)':'none';
