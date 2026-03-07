@@ -164,9 +164,9 @@ html,body{
 /* 전광판 애니메이션 */
 @keyframes marquee {
   0% { transform: translateX(0); }
-  20% { transform: translateX(0); } /* 시작 전 대기 */
-  80% { transform: translateX(calc(-100% + 140px)); } /* 오른쪽 끝까지 이동 */
-  100% { transform: translateX(calc(-100% + 140px)); }
+  20% { transform: translateX(0); }
+  80% { transform: translateX(var(--scroll-dist)); }
+  100% { transform: translateX(var(--scroll-dist)); }
 }
 
 /* 흐르는 텍스트를 위한 컨테이너 설정 */
@@ -179,9 +179,10 @@ html,body{
 .scrolling {
   display: inline-block;
   white-space: nowrap;
-  width: max-content; /* ★ 글자 길이에 맞춰 너비 자동 확장 */
-  text-overflow: clip !important;
-  animation: marquee 8s linear infinite alternate;
+  width: max-content;      /* ★ 글자 길이에 맞춰 너비 확보 */
+  text-overflow: clip !important; /* ★ '...' 제거 */
+  animation: marquee var(--scroll-dur) linear infinite alternate; /* ★ 속도 일관화 */
+  will-change: transform;
 }
 
 /* 슬라이드 애니메이션 정의 */
@@ -191,20 +192,19 @@ html,body{
 }
 
 /* 애니메이션을 적용할 클래스 */
-.np-animate {
+.np-info-animate {
   animation: slideInRight 0.4s ease-out forwards;
 }
 
-/* --- Now Playing 정보 레이아웃 (기존 중복 코드 삭제 후 교체) --- */
 .np-info {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  gap: 1px;
+  gap: 2px;
   padding-top: 5px;
-  overflow: hidden;    /* ★ 글자가 영역 밖으로 나가지 않게 차단 */
+  overflow: hidden;
   position: relative;
   z-index: 10;
 }
@@ -1157,6 +1157,7 @@ const PLAYLIST_ID = 'PLmyAPRLQRJ6lMbAdXYGuyZ627Y9RoX25i';
 let appState='nowplaying', trackIdx=0, currentIdx=0;
 let tracks=[], volume=70, wheelDragged=false, isPlaying=false, carouselBuilt=false;
 let lastVideoId = ''; // 이전 곡 ID 저장용 변수
+let titleCache = {}; // 비디오 ID별 제목 저장소
 
 
 // 배터리 상태 연동 함수
@@ -1218,10 +1219,12 @@ function ensureTrackSlots(){
   }
   if(ids.length>0&&tracks.length>ids.length) tracks.length=ids.length;
 }
-// 트랙 레이블 반환 로직 수정
+
+// --- 트랙 레이블 로직 개선 (캐시 우선 확인) ---
 function trackLabel(i) {
-  // 제목이 있으면 제목을, 없으면 "Track X" 표시
-  return (tracks[i] && tracks[i].title) ? tracks[i].title : `Track ${i + 1}`;
+  const track = tracks[i];
+  if (!track) return `Track ${i + 1}`;
+  return track.title || titleCache[track.id] || `Track ${i + 1}`;
 }
 
 // ════════════════════════════════
@@ -1592,58 +1595,68 @@ function applyMarquee(elementId) {
   const el = document.getElementById(elementId);
   if (!el) return;
   
-  // 이미 애니메이션이 작동 중이면 중복 실행하지 않음 (재생 중 멈춤 해결)
-  if (el.classList.contains('scrolling')) return;
+  el.classList.remove('scrolling');
+  const containerWidth = el.parentElement.offsetWidth;
+  const textWidth = el.scrollWidth;
 
-  // 부모 요소보다 글자가 길 때만 적용
-  if (el.scrollWidth > el.parentElement.offsetWidth) {
+  if (textWidth > containerWidth) {
+    const scrollDist = textWidth - containerWidth;
+    const speed = 30; // 일관된 속도 (초당 30픽셀)
+    const duration = Math.max(3, scrollDist / speed); // 최소 3초 보장
+    
+    el.style.setProperty('--scroll-dist', `-${scrollDist}px`);
+    el.style.setProperty('--scroll-dur', `${duration}s`);
     el.classList.add('scrolling');
   }
 }
 
+// --- updateInfo 함수: 제목 저장 로직 복구 및 최적화 ---
 function updateInfo() {
   if (!ytReady || !ytPlayer.getVideoData) return;
   try {
     const d = ytPlayer.getVideoData();
     if (!d || !d.title) return;
 
-    // ★ 곡이 바뀌었을 때만 실행되는 로직
     if (d.video_id !== lastVideoId) {
       lastVideoId = d.video_id;
       
-      // 썸네일 즉시 업데이트 (격리됨)
-      if (d.video_id) setNPThumb(d.video_id);
+      // 1. 제목 캐시 저장 (Tracks 목록 유지용)
+      titleCache[d.video_id] = d.title;
 
       const infoArea = document.querySelector('.np-info');
       const titleEl = document.getElementById('npTitle');
       const artistEl = document.getElementById('npArtist');
 
-      // 1. 기존 애니메이션 초기화
+      // 2. 기존 상태 초기화
       titleEl.classList.remove('scrolling');
       artistEl.classList.remove('scrolling');
       infoArea.classList.remove('np-info-animate');
 
-      // 2. 텍스트 교체
+      // 3. 텍스트 삽입
       titleEl.textContent = d.title;
       artistEl.textContent = d.author || "Unknown Artist";
       document.getElementById('npAlbum').textContent = "Music Library";
 
-      // 3. 정보 영역만 슬라이드 애니메이션 트리거
+      // 4. 정보 영역만 슬라이드 애니메이션 (썸네일은 고정)
       void infoArea.offsetWidth; 
       infoArea.classList.add('np-info-animate');
+      if (d.video_id) setNPThumb(d.video_id);
 
-      // 4. 전광판 효과 체크 (텍스트가 그려진 후 실행)
+      // 5. 전광판 속도 계산 후 적용
       setTimeout(() => {
         applyMarquee('npTitle');
         applyMarquee('npArtist');
       }, 300);
     }
     
-    // 곡 순서 업데이트 (X of Y)
+    // 6. 곡 순서 및 Tracks 데이터 업데이트
     const idx = ytPlayer.getPlaylistIndex();
     const playlist = ytPlayer.getPlaylist();
     if (idx >= 0 && playlist) {
       document.getElementById('npSeq').textContent = `${idx + 1} of ${playlist.length}`;
+      // ★ 이 줄이 다시 추가되어야 곡 제목이 Tracks에 저장됩니다.
+      updateTrackCardTitle(idx, d.title, d.video_id);
+      if (d.video_id) setCardThumb(idx, d.video_id);
     }
   } catch (_) {}
 }
