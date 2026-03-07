@@ -1152,6 +1152,7 @@ uNxuNxv+S5iTfI+J1Gy3om5iTfI+J1Gy3om5iTfI+P/Z" transform="matrix(0.24 0 0 0.24 18
 // CONFIG
 // ════════════════════════════════
 const PLAYLIST_ID = 'PLmyAPRLQRJ6lMbAdXYGuyZ627Y9RoX25i';
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 // ════════════════════════════════
 // STATE
@@ -1161,7 +1162,21 @@ let tracks=[], volume=70, wheelDragged=false, isPlaying=false, carouselBuilt=fal
 let lastVideoId = ''; // 이전 곡 ID 저장용 변수
 let titleCache = {}; // 비디오 ID별 제목 저장소
 
-
+// --- 휠 클릭 사운드 생성기 ---
+function playTick() {
+  if (audioCtx.state === 'suspended') audioCtx.resume(); // 브라우저 정책 대응
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.type = 'sine'; // 맑은 클릭음
+  osc.frequency.setValueAtTime(1200, audioCtx.currentTime); // 고주파수 '틱'
+  gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.02);
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.02);
+}
+	
 // 배터리 상태 연동 함수
 function updateBatteryStatus() {
   if (!navigator.getBattery) return;
@@ -1438,6 +1453,11 @@ document.getElementById('centerBtn').addEventListener('touchend', e=>{
 // BUTTON ACTIONS
 // ════════════════════════════════
 function onWheelTurn(dir){
+  // 소리 재생
+  playTick();
+  // 진동 세기 조절 (실제 하드웨어 느낌을 위해 짧고 강하게)
+  if (navigator.vibrate) navigator.vibrate(10);
+	
   if(appState==='tracklist'){spinCarousel(dir);}
   else{
     volume=Math.max(0,Math.min(100,volume+dir*6));
@@ -1656,6 +1676,12 @@ function updateInfo() {
     const idx = ytPlayer.getPlaylistIndex();
     const playlist = ytPlayer.getPlaylist();
     if (idx >= 0 && playlist) {
+      const currentTitle = d.title;
+      // 1. 현재 재생중인 트랙 객체에 직접 제목 저장
+      if (tracks[idx]) tracks[idx].title = currentTitle;
+      // 2. 캐시에도 저장 (이중 안전장치)
+      titleCache[d.video_id] = currentTitle;
+		
       document.getElementById('npSeq').textContent = `${idx + 1} of ${playlist.length}`;
       updateTrackCardTitle(idx, d.title, d.video_id); // Tracks 목록 업데이트
       if (d.video_id) setCardThumb(idx, d.video_id);
