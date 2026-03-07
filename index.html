@@ -223,7 +223,7 @@ html,body{
 /* 상태바 */
 .lcd-status{position:absolute;bottom:0;left:0;right:0;height:16px;padding:2px 7px;display:flex;justify-content:space-between;align-items:center;font-size:8px;color:rgba(0,0,0,.4);background:rgba(0,0,0,.05);font-family:monospace;z-index:2;}
 
-/* 아이팟 스타일 배터리 재정의 */
+/* 아이팟 스타일 배터리 재구성 */
 .batt {
   display: flex;
   align-items: center;
@@ -231,36 +231,56 @@ html,body{
 }
 
 .batt-body {
-  width: 14px;  /* 아이팟 비율에 맞게 조정 */
-  height: 7px;
-  border: 1px solid #555;
-  border-radius: 1px;
+  width: 18px;  /* 가로를 살짝 늘려 아이콘 공간 확보 */
+  height: 9px;
+  border: 1px solid #777;
+  border-radius: 1.5px;
   padding: 0.5px;
-  background: #fff;
+  /* 원통형 느낌의 배경 그라데이션 */
+  background: linear-gradient(180deg, #bcbcbc 0%, #ffffff 45%, #ffffff 55%, #bcbcbc 100%);
+  position: relative;
+  overflow: hidden;
 }
 
 .batt-fill {
   width: 100%;
   height: 100%;
-  background: #4cd964; /* 아이팟 특유의 배터리 녹색 */
-  transition: width 0.3s ease, background 0.3s ease;
+  /* 원통형 액체가 담긴 듯한 초록색 그라데이션 */
+  background: linear-gradient(180deg, #34a322 0%, #88e061 45%, #88e061 55%, #34a322 100%);
+  transition: width 0.3s ease;
+  border-radius: 0.5px;
 }
 
 .batt-nub {
   width: 1.5px;
-  height: 3px;
-  background: #555;
+  height: 4px;
+  background: #777;
   border-radius: 0 1px 1px 0;
 }
 
-/* 충전 중일 때 색상 변화 (옵션) */
-.batt-fill.charging {
-  background: #34c759;
+/* 충전 아이콘 스타일 (image_e4a162.png 참고) */
+.batt-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  display: none; /* 기본적으로 숨김 */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Cpath d='M7 2v4h10V2h-2v2H9V2H7zm0 6h10v10l-5 4-5-4V8zm2 2v6.6l3 2.4 3-2.4V10H9z'/%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+  z-index: 10;
 }
 
-/* 저전력 상태 */
+/* 충전 중일 때 나타남 */
+.batt.charging .batt-icon {
+  display: block;
+}
+
+/* 저전력 상태(빨간색 원통) */
 .batt-fill.low {
-  background: #ff3b30;
+  background: linear-gradient(180deg, #c32d24 0%, #f17871 45%, #f17871 55%, #c32d24 100%);
 }
 
 /* 휠 버튼 */
@@ -969,6 +989,7 @@ uNxuNxv+S5iTfI+J1Gy3om5iTfI+J1Gy3om5iTfI+P/Z" transform="matrix(0.24 0 0 0.24 18
             <div class="batt" id="battIndicator">
                 <div class="batt-body">
                     <div class="batt-fill" id="realBattFill"></div>
+                    <div class="batt-icon" id="battIcon"></div>
                 </div>
                 <div class="batt-nub"></div>
             </div>
@@ -1038,14 +1059,25 @@ let tracks=[], volume=70, wheelDragged=false, isPlaying=false, carouselBuilt=fal
 function updateBatteryStatus() {
   if (!navigator.getBattery) return;
   navigator.getBattery().then(battery => {
+    const battContainer = document.getElementById('battIndicator');
     const fill = document.getElementById('realBattFill');
+    
     const refresh = () => {
       const level = battery.level * 100;
       fill.style.width = level + '%';
-      if (battery.charging) fill.style.background = "#34c759";
-      else if (level <= 20) fill.style.background = "#ff3b30";
-      else fill.style.background = "#4cd964";
+      
+      // 충전 중 여부에 따라 클래스 토글
+      if (battery.charging) {
+        battContainer.classList.add('charging');
+        fill.classList.remove('low');
+      } else {
+        battContainer.classList.remove('charging');
+        // 20% 이하면 빨간색 테마 적용
+        if (level <= 20) fill.classList.add('low');
+        else fill.classList.remove('low');
+      }
     };
+    
     refresh();
     battery.addEventListener('levelchange', refresh);
     battery.addEventListener('chargingchange', refresh);
