@@ -51,7 +51,7 @@ html,body{
   border-radius: 6px;
   overflow:hidden;
   position:relative;
-  font-family:'Noto Sans KR',sans-serif;
+  font-family:'Helvetica Neue', Helvetica, Arial, sans-serif; /* 아이팟 스타일 폰트 */
   font-size:11px;
 }
 .lcd-wrap::after{
@@ -149,10 +149,14 @@ html,body{
   transition:opacity .4s ease;
 }
 .np-art-shine{display:none;}
-.np-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;padding-top:2px}
-.np-title{font-size:10px;font-weight:600;color:#182818;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;}
-.np-artist{font-size:9px;color:#4a5a4a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.np-vol-row{display:flex;align-items:center;gap:3px;margin-top:5px}
+
+/* 정보 텍스트 스타일 */
+.np-info { display: flex; flex-direction: column; gap: 2px; padding-top: 5px; }
+.np-title { font-size: 11px; font-weight: bold; color: #000; }
+.np-artist, .np-album, .np-sequence { font-size: 10px; color: #333; }
+.np-sequence { margin-top: 2px; font-weight: 500; }
+
+.np-vol-row { display: none !important; }
 .vol-label{font-size:7.5px;color:#4a6a4a;font-family:monospace;flex-shrink:0}
 .vol-track{flex:1;height:3px;background:rgba(0,0,0,.15);border-radius:2px;overflow:hidden}
 .vol-fill{height:100%;background:#4060cc;border-radius:2px;transition:width .12s}
@@ -194,8 +198,27 @@ html,body{
 }
 
 .prog-time:last-child{text-align:right}
-.prog-track{flex:1;height:12px;background:linear-gradient(180deg,#e8e8e8,#ffffff,#efefef,#e8e8e8);border-radius:0px;border:0px solid #aaa;overflow:hidden;box-shadow:inset 0 0px 1px rgba(0,0,0,.15)}
-.prog-fill{height:100%;background:linear-gradient(180deg,#91a3cf,#83a3d4,#6a96ca,#7fbae7);border-radius:0px;transition:width .6s linear;width:0%;box-shadow:inset 0 1px 0 rgba(255,255,255,.4)}
+
+/* 재생 바 그라데이션 및 미러 효과 */
+.prog-track {
+  flex: 1;
+  height: 14px;
+  background: #e0e0e0;
+  border: 1px solid #bcbcbc;
+  border-radius: 0; /* 클래식은 각진 형태 */
+  overflow: visible; /* 반사 효과를 위해 */
+  position: relative;
+  box-shadow: inset 0 1px 1px rgba(0,0,0,0.1);
+  /* 재생 바 하단 미러(반사) 효과 */
+  -webkit-box-reflect: below 1px linear-gradient(transparent, rgba(255,255,255,0.3));
+}
+
+.prog-fill {
+  height: 100%;
+  /* 실제 아이팟과 유사한 파란색 그라데이션 */
+  background: linear-gradient(180deg, #6eb4f7 0%, #1a82f0 50%, #005bc5 100%);
+  width: 0%;
+}
 
 /* 트랙 캐러셀 */
 .albums-scene{height:120px;position:relative;display:flex;align-items:center;justify-content:center;perspective:110px;overflow:visible;}
@@ -1009,13 +1032,9 @@ uNxuNxv+S5iTfI+J1Gy3om5iTfI+J1Gy3om5iTfI+P/Z" transform="matrix(0.24 0 0 0.24 18
             </div>
           </div>
           <div class="np-info">
-            <div class="np-title" id="npTitle">Tap &#9654; to play</div>
-            <div class="np-artist" id="npArtist">&#8212;</div>
-            <div class="np-vol-row">
-              <span class="vol-label">vol</span>
-              <div class="vol-track"><div class="vol-fill" id="volFill" style="width:70%"></div></div>
-            </div>
-            <div class="np-bars">
+            <div class="np-title" id="npTitle">Loading...</div>
+            <div class="np-artist" id="npArtist">Artist</div>
+            <div class="np-album" id="npAlbum">—</div> <div class="np-sequence" id="npSeq">0 of 0</div> <div class="np-bars">
               <div class="np-bar paused"></div>
               <div class="np-bar paused"></div>
               <div class="np-bar paused"></div>
@@ -1479,16 +1498,31 @@ function startTimers(){
 }
 function stopTimers(){clearInterval(infoTimer);clearInterval(progTimer);}
 
-function updateInfo(){
-  if(!ytReady||!ytPlayer.getVideoData)return;
-  try{
-    const d=ytPlayer.getVideoData();if(!d||!d.title)return;
-    document.getElementById('npTitle').textContent=d.title||'—';
-    document.getElementById('npArtist').textContent=d.author||'—';
-    if(d.video_id) setNPThumb(d.video_id);
-    const idx=ytPlayer.getPlaylistIndex();
-    if(idx>=0){updateTrackCardTitle(idx,d.title);if(d.video_id)setCardThumb(idx,d.video_id);}
-  }catch(_){}
+function updateInfo() {
+  if (!ytReady || !ytPlayer.getVideoData) return;
+  try {
+    const d = ytPlayer.getVideoData();
+    if (!d || !d.title) return;
+
+    // 제목과 가수 분리 시도 (보통 "가수 - 제목" 형식)
+    let title = d.title;
+    let artist = d.author || "Unknown Artist";
+    
+    document.getElementById('npTitle').textContent = title;
+    document.getElementById('npArtist').textContent = artist;
+    document.getElementById('npAlbum').textContent = "YouTube Music"; // 앨범 정보 대용
+
+    // 곡 순서 업데이트 (X of Y)
+    const idx = ytPlayer.getPlaylistIndex();
+    const playlist = ytPlayer.getPlaylist();
+    if (idx >= 0 && playlist) {
+      document.getElementById('npSeq').textContent = `${idx + 1} of ${playlist.length}`;
+      updateTrackCardTitle(idx, title);
+      if (d.video_id) setCardThumb(idx, d.video_id);
+    }
+    
+    if (d.video_id) setNPThumb(d.video_id);
+  } catch (_) {}
 }
 
 function updateProg(){
