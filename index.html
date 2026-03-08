@@ -167,8 +167,8 @@ html,body{
 }
 
 .meta-icon {
-  width: 16px;
-  height: 16px;
+  width: 13px;
+  height: 13px;
   color: #555;
 }
 .meta-icon svg {
@@ -177,7 +177,59 @@ html,body{
   fill: currentColor;
 }
 
-/* 전광판 애니메이션 */
+/* ── iPod 메뉴 뷰 ── */
+.menu-list {
+  list-style: none;
+  margin: 0; padding: 0;
+  overflow: hidden;
+}
+.menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px;
+  height: 22px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #111;
+  border-bottom: 1px solid rgba(0,0,0,.07);
+  white-space: nowrap;
+  overflow: hidden;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.menu-item:active { opacity: .7; }
+.menu-item.selected {
+  background: linear-gradient(180deg, #4fa3f5 0%, #1666d0 100%);
+  color: #fff;
+  text-shadow: 0 1px 0 rgba(0,0,0,.2);
+}
+.menu-item .menu-arrow {
+  font-size: 9px;
+  opacity: .6;
+  flex-shrink: 0;
+}
+.menu-item .menu-value {
+  font-size: 10px;
+  color: #666;
+  flex-shrink: 0;
+}
+.menu-item.selected .menu-value { color: rgba(255,255,255,.8); }
+/* About 뷰 */
+.about-body {
+  padding: 10px;
+  font-size: 10px;
+  color: #333;
+  line-height: 1.7;
+}
+.about-body .about-title {
+  font-size: 12px;
+  font-weight: bold;
+  color: #111;
+  margin-bottom: 6px;
+}
+
+
 @keyframes marquee {
   0% { transform: translateX(0); }
   20% { transform: translateX(0); }
@@ -1175,6 +1227,15 @@ uNxuNxv+S5iTfI+J1Gy3om5iTfI+J1Gy3om5iTfI+P/Z" transform="matrix(0.24 0 0 0.24 18
         <div class="albums-scene" id="albumsScene"></div>
         <div class="albums-name" id="albumsName">&#8212;</div>
       </div>
+      <div class="lcd-view hidden" id="view-menu">
+        <ul class="menu-list" id="menuList"></ul>
+      </div>
+      <div class="lcd-view hidden" id="view-about">
+        <div class="about-body">
+          <div class="about-title">RetroPod</div>
+          <div id="aboutContent"></div>
+        </div>
+      </div>
     </div>
 </div>
 
@@ -1280,14 +1341,142 @@ function trackColorLight(i){return `hsl(${HUES[i%HUES.length]},60%,58%)`;}
 // ════════════════════════════════
 // VIEW
 // ════════════════════════════════
+// ════════════════════════════════
+// MENU SYSTEM
+// ════════════════════════════════
+let lang = 'Korean';
+
+const MENUS = {
+  main: {
+    title: { Korean:'iPod', English:'iPod' },
+    items: [
+      { id:'music',    label:{ Korean:'Music',    English:'Music'    }, sub:'music'    },
+      { id:'settings', label:{ Korean:'Settings', English:'Settings' }, sub:'settings' },
+    ]
+  },
+  music: {
+    title: { Korean:'Music', English:'Music' },
+    items: [
+      { id:'playlists',  label:{ Korean:'Playlists',   English:'Playlists'   }, action:'tracklist'  },
+      { id:'nowplaying', label:{ Korean:'Now Playing', English:'Now Playing' }, action:'nowplaying' },
+    ]
+  },
+  settings: {
+    title: { Korean:'Settings', English:'Settings' },
+    items: [
+      { id:'language', label:{ Korean:'Language', English:'Language' }, sub:'language' },
+      { id:'about',    label:{ Korean:'About',    English:'About'    }, action:'about' },
+    ]
+  },
+  language: {
+    title: { Korean:'Language', English:'Language' },
+    items: [
+      { id:'korean',  label:{ Korean:'한국어', English:'Korean'  }, action:'setlang_Korean'  },
+      { id:'english', label:{ Korean:'English', English:'English' }, action:'setlang_English' },
+    ]
+  }
+};
+
+let menuStack  = [{ menuId:'main', selIdx:0 }];
+let menuSelIdx = 0;
+
+function menuLabel(item){ return item.label[lang] || item.label['English']; }
+
+function renderMenu(menuId){
+  const menu = MENUS[menuId];
+  if(!menu) return;
+  const list = document.getElementById('menuList');
+  list.innerHTML = '';
+  menu.items.forEach((item, i) => {
+    const li = document.createElement('li');
+    li.className = 'menu-item' + (i === menuSelIdx ? ' selected' : '');
+    let rightHTML = '';
+    if(item.sub) rightHTML = `<span class="menu-arrow">›</span>`;
+    if(item.id === 'language') rightHTML = `<span class="menu-value">${lang}</span>`;
+    if(item.id === 'korean' || item.id === 'english'){
+      const val = item.id === 'korean' ? 'Korean' : 'English';
+      rightHTML = lang === val ? `<span class="menu-value">✓</span>` : '';
+    }
+    li.innerHTML = `<span>${menuLabel(item)}</span>${rightHTML}`;
+    // 클릭으로도 선택/진입 가능
+    li.addEventListener('click', () => { menuSelIdx = i; menuSelect(); });
+    list.appendChild(li);
+  });
+}
+
+function openMenu(menuId, selIdx){
+  menuSelIdx = selIdx || 0;
+  appState = 'menu';
+  const menu = MENUS[menuId];
+  document.querySelectorAll('.lcd-view').forEach(v=>v.classList.add('hidden'));
+  document.getElementById('view-menu').classList.remove('hidden');
+  document.getElementById('hTitle').textContent = menu.title[lang] || menu.title['English'];
+  document.getElementById('hRight').textContent = '▶';
+  renderMenu(menuId);
+}
+
+function menuSelect(){
+  const stackTop = menuStack[menuStack.length-1];
+  const menu = MENUS[stackTop.menuId];
+  const item = menu.items[menuSelIdx];
+  if(!item) return;
+  if(item.sub){
+    menuStack.push({ menuId: stackTop.menuId, selIdx: menuSelIdx });
+    menuStack.push({ menuId: item.sub, selIdx: 0 });
+    openMenu(item.sub, 0);
+  } else if(item.action){
+    if(item.action === 'tracklist'){
+      menuStack.push({ menuId: stackTop.menuId, selIdx: menuSelIdx });
+      showView('tracklist');
+    } else if(item.action === 'nowplaying'){
+      menuStack.push({ menuId: stackTop.menuId, selIdx: menuSelIdx });
+      showView('nowplaying');
+    } else if(item.action === 'about'){
+      menuStack.push({ menuId: stackTop.menuId, selIdx: menuSelIdx });
+      showAbout();
+    } else if(item.action.startsWith('setlang_')){
+      lang = item.action.replace('setlang_','');
+      openMenu(stackTop.menuId, menuSelIdx);
+    }
+  }
+}
+
+function menuBack(){
+  if(menuStack.length <= 1){ menuStack=[{menuId:'main',selIdx:0}]; showView('nowplaying'); return; }
+  menuStack.pop();
+  const prev = menuStack[menuStack.length-1];
+  menuSelIdx = prev.selIdx || 0;
+  openMenu(prev.menuId, menuSelIdx);
+}
+
+function showAbout(){
+  appState = 'about';
+  document.querySelectorAll('.lcd-view').forEach(v=>v.classList.add('hidden'));
+  document.getElementById('view-about').classList.remove('hidden');
+  document.getElementById('hTitle').textContent = 'About';
+  document.getElementById('hRight').textContent = '▶';
+  let ids=[]; try{ ids=ytPlayer.getPlaylist()||[]; }catch(_){}
+  const tc = ids.length || tracks.length || 0;
+  document.getElementById('aboutContent').innerHTML = `
+    Playlist: ${PLAYLIST_ID.substring(0,10)}...<br>
+    Tracks: ${tc}<br>
+    Language: ${lang}<br>
+    <br>
+    Built with YouTube IFrame API<br>
+    UI inspired by iPod Classic
+  `;
+}
+
 function showView(name){
-  appState=name;
+  appState = name;
   document.querySelectorAll('.lcd-view').forEach(v=>v.classList.add('hidden'));
   document.getElementById('view-'+name).classList.remove('hidden');
-  document.getElementById('hTitle').textContent=name==='nowplaying'?'Now Playing':'Tracks';
-  document.getElementById('hRight').textContent=name==='nowplaying'&&isPlaying?'❚❚':'▶';
+  const titles = { nowplaying:'Now Playing', tracklist:'Playlists' };
+  document.getElementById('hTitle').textContent = titles[name] || name;
+  document.getElementById('hRight').textContent = (name==='nowplaying'&&isPlaying)?'❚❚':'▶';
   if(name==='tracklist') openTracklist();
 }
+
 
 // ════════════════════════════════
 // TRACK DATA
@@ -1476,17 +1665,12 @@ function updateNPArt(idx){
 
   function onMove(x, y){
     if(lastAngle === null) return;
-
-    if(Math.hypot(x - startX, y - startY) >= DRAG_PX){
-      wheelDragged = true;
-    }
-
+    if(Math.hypot(x-startX, y-startY) >= DRAG_PX) wheelDragged = true;
     let diff = getAngle(x, y) - lastAngle;
     if(diff >  180) diff -= 360;
     if(diff < -180) diff += 360;
     accumDeg += diff;
     lastAngle = getAngle(x, y);
-
     if(Math.abs(accumDeg) >= THRESHOLD){
       const dir = accumDeg > 0 ? 1 : -1;
       onWheelTurn(dir);
@@ -1496,9 +1680,7 @@ function updateNPArt(idx){
   }
 
   function onEnd(x, y){
-    if(!wheelDragged) {
-      fireZone(x, y);
-    }
+    if(!wheelDragged) fireZone(x, y);
     lastAngle = null;
   }
 
@@ -1550,15 +1732,18 @@ centerBtn.addEventListener('touchend', endPress, {passive: false});
 // BUTTON ACTIONS
 // ════════════════════════════════
 function onWheelTurn(dir){
-  // 소리 재생
   playTick();
-  // 진동 세기 조절 (실제 하드웨어 느낌을 위해 짧고 강하게)
-  if (navigator.vibrate) navigator.vibrate(10);
-	
-  if(appState==='tracklist'){spinCarousel(dir);}
-  else{
+  if(navigator.vibrate) navigator.vibrate(10);
+  if(appState==='menu'){
+    const stackTop = menuStack[menuStack.length-1];
+    const menu = MENUS[stackTop.menuId];
+    const n = menu.items.length;
+    menuSelIdx = ((menuSelIdx+dir)%n+n)%n;
+    renderMenu(stackTop.menuId);
+  } else if(appState==='tracklist'){
+    spinCarousel(dir);
+  } else {
     volume=Math.max(0,Math.min(100,volume+dir*6));
-    document.getElementById('volFill').style.width=volume+'%';
     applyVolume();
     if(navigator.vibrate) navigator.vibrate(3);
   }
@@ -1567,24 +1752,33 @@ function onWheelTurn(dir){
 function onCenter(){
   ripple();
   if(navigator.vibrate) navigator.vibrate([8,25,8]);
-
-  if(appState==='tracklist'){
-    // 트랙리스트에서는 기존처럼 곡 선택 기능 유지
-    currentIdx=trackIdx; 
+  if(appState==='menu'){
+    menuSelect();
+  } else if(appState==='about'){
+    menuBack();
+  } else if(appState==='tracklist'){
+    currentIdx=trackIdx;
     updateNPArt(currentIdx);
     document.getElementById('npTitle').textContent=trackLabel(currentIdx);
     document.getElementById('npArtist').textContent=`Track ${currentIdx+1}`;
     showView('nowplaying');
     if(ytReady) try{ytPlayer.playVideoAt(currentIdx);}catch(_){}
   } else {
-    // Now Playing 화면에서는 짧게 터치 시 셔플 토글
     toggleShuffle();
   }
 }
-function onMenu(){ if(navigator.vibrate)navigator.vibrate(6); showView(appState==='nowplaying'?'tracklist':'nowplaying'); }
-function onPrev(){ if(navigator.vibrate)navigator.vibrate(6); appState==='nowplaying'?prevTrack():spinCarousel(-1); }
-function onNext(){ if(navigator.vibrate)navigator.vibrate(6); appState==='nowplaying'?nextTrack():spinCarousel(+1); }
-function onPlayPauseBtn(){ if(appState==='tracklist'){onCenter();return;} togglePlay(); }
+function onMenu(){
+  if(navigator.vibrate) navigator.vibrate(6);
+  if(appState==='nowplaying'||appState==='tracklist'){
+    menuStack=[{menuId:'main',selIdx:0}];
+    openMenu('main',0);
+  } else if(appState==='menu'||appState==='about'){
+    menuBack();
+  }
+}
+function onPrev(){ if(navigator.vibrate)navigator.vibrate(6); if(appState==='nowplaying')prevTrack(); else if(appState==='tracklist')spinCarousel(-1); }
+function onNext(){ if(navigator.vibrate)navigator.vibrate(6); if(appState==='nowplaying')nextTrack(); else if(appState==='tracklist')spinCarousel(+1); }
+function onPlayPauseBtn(){ if(appState==='tracklist'){onCenter();return;} if(appState==='menu'||appState==='about')return; togglePlay(); }
 
 // 리플 (SVG circle 애니메이션)
 function ripple(){
@@ -1822,6 +2016,7 @@ document.head.appendChild(_s);
 // 초기화
 updateBatteryStatus();
 updateNPArt(0);
+menuStack = [{ menuId:'main', selIdx:0 }];
 </script>
 </body>
 </html>
