@@ -10,7 +10,7 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{
   width:100%;height:100%;
-  background:#111;
+  background:#ffffff;
   display:flex;align-items:center;justify-content:center;
   overflow:hidden;
   user-select:none;-webkit-user-select:none;
@@ -205,9 +205,18 @@ html,body{
   text-shadow: 0 1px 0 rgba(0,0,0,.2);
 }
 .menu-item .menu-arrow {
-  font-size: 9px;
-  opacity: .6;
+  width: 15px;
+  height: 15px;
   flex-shrink: 0;
+  opacity: .45;
+  fill: currentColor;
+  display: flex;
+  align-items: center;
+}
+.menu-item .menu-arrow svg {
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
 }
 .menu-item .menu-value {
   font-size: 10px;
@@ -504,7 +513,7 @@ html,body{
 	.st3{fill:#050808;}
 	.st4{fill:#383B3C;}
 	.st5{fill:#FFFFFF;}
-	.st6{opacity:0.5;}
+	.st6{opacity:0.6;}
 	.st7{fill:none;stroke:#FFFFFF;stroke-width:1.833;stroke-miterlimit:10;}
 	.st8{fill:none;stroke:#121212;stroke-width:0.4582;stroke-miterlimit:10;}
 	.st9{fill:#A9B3B6;}
@@ -1344,35 +1353,44 @@ function trackColorLight(i){return `hsl(${HUES[i%HUES.length]},60%,58%)`;}
 // ════════════════════════════════
 // MENU SYSTEM
 // ════════════════════════════════
-let lang = 'Korean';
+let lang = 'English';
+let deviceTheme = 'silver';
 
 const MENUS = {
   main: {
-    title: { Korean:'iPod', English:'iPod' },
+    title: { Korean:'RetroPod', English:'RetroPod' },
     items: [
-      { id:'music',    label:{ Korean:'Music',    English:'Music'    }, sub:'music'    },
-      { id:'settings', label:{ Korean:'Settings', English:'Settings' }, sub:'settings' },
+      { id:'music',    label:{ Korean:'음악',    English:'Music'    }, sub:'music'    },
+      { id:'about',    label:{ Korean:'About',    English:'About'    }, action:'about' },
+      { id:'settings', label:{ Korean:'설정', English:'Settings' }, sub:'settings' },
     ]
   },
   music: {
-    title: { Korean:'Music', English:'Music' },
+    title: { Korean:'음악', English:'Music' },
     items: [
-      { id:'playlists',  label:{ Korean:'Playlists',   English:'Playlists'   }, action:'tracklist'  },
-      { id:'nowplaying', label:{ Korean:'Now Playing', English:'Now Playing' }, action:'nowplaying' },
+      { id:'playlists',  label:{ Korean:'플레이 리스트',   English:'Playlists'   }, action:'tracklist'  },
+      { id:'nowplaying', label:{ Korean:'재생중인 노래', English:'Now Playing' }, action:'nowplaying' },
     ]
   },
   settings: {
-    title: { Korean:'Settings', English:'Settings' },
+    title: { Korean:'설정', English:'Settings' },
     items: [
-      { id:'language', label:{ Korean:'Language', English:'Language' }, sub:'language' },
-      { id:'about',    label:{ Korean:'About',    English:'About'    }, action:'about' },
+      { id:'theme',    label:{ Korean:'테마', English:'Device Theme' }, sub:'theme'    },
+      { id:'language', label:{ Korean:'언어',     English:'Language'     }, sub:'language' },
+    ]
+  },
+  theme: {
+    title: { Korean:'테마', English:'Device Theme' },
+    items: [
+      { id:'silver', label:{ Korean:'실버', English:'Silver' }, action:'settheme_silver' },
+      { id:'black',  label:{ Korean:'블랙',  English:'Black'  }, action:'settheme_black'  },
     ]
   },
   language: {
-    title: { Korean:'Language', English:'Language' },
+    title: { Korean:'언어', English:'Language' },
     items: [
       { id:'korean',  label:{ Korean:'한국어', English:'Korean'  }, action:'setlang_Korean'  },
-      { id:'english', label:{ Korean:'English', English:'English' }, action:'setlang_English' },
+      { id:'english', label:{ Korean:'영어', English:'English' }, action:'setlang_English' },
     ]
   }
 };
@@ -1391,11 +1409,15 @@ function renderMenu(menuId){
     const li = document.createElement('li');
     li.className = 'menu-item' + (i === menuSelIdx ? ' selected' : '');
     let rightHTML = '';
-    if(item.sub) rightHTML = `<span class="menu-arrow">›</span>`;
+    if(item.sub) rightHTML = `<span class="menu-arrow"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linejoin="round"><path d="M13.2929,4.29289 C12.9024,4.68342 12.9024,5.31658 13.2929,5.70711 L19.5858,12 L13.2929,18.2929 C12.9024,18.6834 12.9024,19.3166 13.2929,19.7071 C13.6834,20.0976 14.3166,20.0976 14.7071,19.7071 L21.7071,12.7071 C22.0976,12.3166 22.0976,11.6834 21.7071,11.2929 L14.7071,4.29289 C14.3166,3.90237 13.6834,3.90237 13.2929,4.29289 Z"/></svg></span>`;
     if(item.id === 'language') rightHTML = `<span class="menu-value">${lang}</span>`;
+    if(item.id === 'theme')    rightHTML = `<span class="menu-value">${deviceTheme==='silver'?'Silver':'Black'}</span>`;
     if(item.id === 'korean' || item.id === 'english'){
       const val = item.id === 'korean' ? 'Korean' : 'English';
       rightHTML = lang === val ? `<span class="menu-value">✓</span>` : '';
+    }
+    if(item.id === 'silver' || item.id === 'black'){
+      rightHTML = deviceTheme === item.id ? `<span class="menu-value">✓</span>` : '';
     }
     li.innerHTML = `<span>${menuLabel(item)}</span>${rightHTML}`;
     // 클릭으로도 선택/진입 가능
@@ -1437,6 +1459,10 @@ function menuSelect(){
     } else if(item.action.startsWith('setlang_')){
       lang = item.action.replace('setlang_','');
       openMenu(stackTop.menuId, menuSelIdx);
+    } else if(item.action.startsWith('settheme_')){
+      deviceTheme = item.action.replace('settheme_','');
+      applyTheme(deviceTheme);
+      openMenu(stackTop.menuId, menuSelIdx);
     }
   }
 }
@@ -1449,23 +1475,107 @@ function menuBack(){
   openMenu(prev.menuId, menuSelIdx);
 }
 
+function applyTheme(theme){
+  const svg = document.getElementById('ipod-svg');
+  // Remove filter
+  svg.style.filter = '';
+
+  // Body radial gradient stops (SVGID_1_)
+  const bodyStops = document.querySelectorAll('#SVGID_1_ stop');
+  const btnStops  = document.querySelectorAll('#SVGID_3_ stop');
+  const icons     = document.querySelectorAll('.st9');
+  const wheelFills = document.querySelectorAll('.st5');
+  const borders   = document.querySelectorAll('.st7');  // 흰색 테두리 라인
+
+  if(theme === 'black'){
+    if(bodyStops[0]) bodyStops[0].style.stopColor = '#4e4e4e';
+    if(bodyStops[1]) bodyStops[1].style.stopColor = '#2e2e2e';
+    wheelFills.forEach(el => { el.style.fill = '#2b2b2b'; });
+    if(btnStops[0])  btnStops[0].style.stopColor  = '#2e2e2e';
+    if(btnStops[1])  btnStops[1].style.stopColor  = '#4e4e4e';
+    icons.forEach(el => el.style.fill = '#ffffff');
+    borders.forEach(el => { el.style.stroke = '#2a2a2a'; });  // 테두리 → 블랙
+  } else {
+    if(bodyStops[0]) bodyStops[0].style.stopColor = '#F0F1F1';
+    if(bodyStops[1]) bodyStops[1].style.stopColor = '#E2E4E3';
+    wheelFills.forEach(el => { el.style.fill = ''; });
+    document.querySelectorAll('.st6').forEach(el => { el.style.opacity = ''; });
+    if(btnStops[0])  btnStops[0].style.stopColor  = '#C8CBCA';
+    if(btnStops[1])  btnStops[1].style.stopColor  = '#FFFFFF';
+    icons.forEach(el => el.style.fill = '');
+    borders.forEach(el => { el.style.stroke = ''; });  // 테두리 → 원래 흰색
+  }
+
+  document.querySelector('.lcd-wrap').dataset.theme = theme;
+}
+
+// About 항목 정의
+const ABOUT_ITEMS = [
+  { label: '🌐 Website',   action: 'url',   value: 'https://sites.google.com/view/wooseoksuh/about' },
+  { label: '💼 LinkedIn',  action: 'url',   value: 'https://linkedin.com/in/wooseok-suh-woody' },
+  { label: '📧 Email',     action: 'copy',  value: 'wooseok.woody@gmail.com' },
+];
+let aboutSelIdx = 0;
+
+function renderAbout(){
+  const list = document.getElementById('aboutContent');
+  list.innerHTML = '';
+  // 이름/타이틀 헤더
+  const header = document.createElement('div');
+  header.style.cssText = 'padding:8px 10px 6px;border-bottom:1px solid rgba(0,0,0,.1);';
+  header.innerHTML = `
+    <div style="font-size:11px;font-weight:bold;color:#111;">Wooseok Suh</div>
+    <div style="font-size:9.5px;font-weight:300;color:#777;margin-top:1px;">Product Designer/Engineer</div>
+  `;
+  list.appendChild(header);
+  // 선택 가능한 항목들
+  ABOUT_ITEMS.forEach((item, i) => {
+    const li = document.createElement('div');
+    li.style.cssText = `display:flex;align-items:center;justify-content:space-between;padding:0 8px;height:22px;font-size:11px;font-weight:500;border-bottom:1px solid rgba(0,0,0,.07);cursor:pointer;`;
+    if(i === aboutSelIdx){
+      li.style.background = 'linear-gradient(180deg,#4fa3f5 0%,#1666d0 100%)';
+      li.style.color = '#fff';
+    } else {
+      li.style.color = '#111';
+    }
+    const hint = item.action === 'copy' ? '<span style="font-size:9px;opacity:.6">tap to copy</span>' : '<span style="font-size:9px;opacity:.6">tap to open</span>';
+    li.innerHTML = `<span>${item.label}</span>${hint}`;
+    li.addEventListener('click', () => { aboutSelIdx = i; aboutSelect(); });
+    list.appendChild(li);
+  });
+}
+
+function aboutSelect(){
+  const item = ABOUT_ITEMS[aboutSelIdx];
+  if(!item) return;
+  if(item.action === 'url'){
+    window.open(item.value, '_blank');
+  } else if(item.action === 'copy'){
+    navigator.clipboard.writeText(item.value).then(() => {
+      // 복사 완료 피드백
+      const list = document.getElementById('aboutContent');
+      const els = list.querySelectorAll('div');
+      const target = els[aboutSelIdx + 1]; // +1 for header
+      if(target){
+        const orig = target.innerHTML;
+        target.innerHTML = `<span>📧 Email</span><span style="font-size:9px;color:#4caf50;font-weight:bold;">Copied!</span>`;
+        setTimeout(() => { target.innerHTML = orig; }, 1500);
+      }
+    }).catch(() => {
+      prompt('이메일 주소:', item.value);
+    });
+  }
+  if(navigator.vibrate) navigator.vibrate([8,25,8]);
+}
+
 function showAbout(){
   appState = 'about';
+  aboutSelIdx = 0;
   document.querySelectorAll('.lcd-view').forEach(v=>v.classList.add('hidden'));
   document.getElementById('view-about').classList.remove('hidden');
   document.getElementById('hTitle').textContent = 'About';
   document.getElementById('hRight').textContent = '▶';
-  let ids=[]; try{ ids=ytPlayer.getPlaylist()||[]; }catch(_){}
-  const tc = ids.length || tracks.length || 0;
-  document.getElementById('aboutContent').innerHTML = `
-    <b>Wooseok Suh</b><br>
-    Product Desginer/Engineer<br>
-    <br>
-    🌐 sites.google.com/view/wooseoksuh/about<br>
-    💼 linkedin.com/in/wooseok-suh-woody<br>
-    📧 wooseok.woody@gmail.com<br>
-  <br>
-  `;
+  renderAbout();
 }
 
 function showView(name){
@@ -1741,6 +1851,10 @@ function onWheelTurn(dir){
     const n = menu.items.length;
     menuSelIdx = ((menuSelIdx+dir)%n+n)%n;
     renderMenu(stackTop.menuId);
+  } else if(appState==='about'){
+    const n = ABOUT_ITEMS.length;
+    aboutSelIdx = ((aboutSelIdx+dir)%n+n)%n;
+    renderAbout();
   } else if(appState==='tracklist'){
     spinCarousel(dir);
   } else {
@@ -1756,7 +1870,7 @@ function onCenter(){
   if(appState==='menu'){
     menuSelect();
   } else if(appState==='about'){
-    menuBack();
+    aboutSelect();
   } else if(appState==='tracklist'){
     currentIdx=trackIdx;
     updateNPArt(currentIdx);
