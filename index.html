@@ -1190,9 +1190,8 @@ let appState='nowplaying', trackIdx=0, currentIdx=0;
 let tracks=[], volume=70, wheelDragged=false, isPlaying=false, carouselBuilt=false;
 let lastVideoId = ''; // 이전 곡 ID 저장용 변수
 let titleCache = {}; // 비디오 ID별 제목 저장소
-let isShuffle = false;
-let longPressTimer = null;
-let isLongPress = false;
+let isShuffle = false; 
+let isRepeat = false; // 리핏 상태 변수 추가
 
 // --- 휠 클릭 사운드 생성기 ---
 function playTick() {
@@ -1238,18 +1237,31 @@ function updateBatteryStatus() {
   });
 }
 
+// [수정] 셔플 토글 함수
 function toggleShuffle() {
   if (!ytReady) return;
-  isShuffle = !isShuffle; // 전역 변수 상태 변경
+  isShuffle = !isShuffle;
   
-  ytPlayer.setShuffle(isShuffle);
+  ytPlayer.setShuffle(isShuffle); // 셔플 상태 적용
   
   const icon = document.getElementById('shuffleStatus');
   if (icon) {
     icon.style.display = isShuffle ? 'block' : 'none';
   }
-  
-  console.log("Shuffle Mode:", isShuffle);
+}
+
+// [추가] 리핏 토글 함수
+function toggleRepeat() {
+  if (!ytReady) return;
+  isRepeat = !isRepeat;
+
+  // 유튜브 API: 플레이리스트 반복 모드 설정 (true/false)
+  ytPlayer.setLoop(isRepeat);
+
+  const icon = document.getElementById('repeatStatus');
+  if (icon) {
+    icon.style.display = isRepeat ? 'block' : 'none';
+  }
 }
 
 // 색상
@@ -1505,24 +1517,23 @@ function updateNPArt(idx){
   });
 })();
 
-// 센터 버튼
-const centerBtn = document.getElementById('centerBtn');
-
+// [수정] 센터 버튼 이벤트 핸들러
 const startPress = (e) => {
-  e.preventDefault(); // 중복 실행 방지 및 기본 동작 차단
+  e.preventDefault();
   isLongPress = false;
   longPressTimer = setTimeout(() => {
-    toggleShuffle(); // 셔플 토글 실행
+    // 0.8초간 누르고 있으면 리핏 토글 실행
+    toggleRepeat(); 
     isLongPress = true; 
-    if (navigator.vibrate) navigator.vibrate([50, 30, 50]); // 셔플 알림 진동
-  }, 800); // 0.8초간 누르면 셔플
+    if (navigator.vibrate) navigator.vibrate([50, 30, 50]); 
+  }, 800);
 };
 
 const endPress = (e) => {
   e.preventDefault();
   clearTimeout(longPressTimer);
   if (!isLongPress) {
-    // 짧게 눌렀을 때만 재생/일시정지 실행
+    // 짧게 눌렀을 때 실행
     onCenter(); 
   }
 };
@@ -1554,13 +1565,19 @@ function onWheelTurn(dir){
 function onCenter(){
   ripple();
   if(navigator.vibrate) navigator.vibrate([8,25,8]);
+
   if(appState==='tracklist'){
-    currentIdx=trackIdx; updateNPArt(currentIdx);
+    // 트랙리스트에서는 기존처럼 곡 선택 기능 유지
+    currentIdx=trackIdx; 
+    updateNPArt(currentIdx);
     document.getElementById('npTitle').textContent=trackLabel(currentIdx);
     document.getElementById('npArtist').textContent=`Track ${currentIdx+1}`;
     showView('nowplaying');
     if(ytReady) try{ytPlayer.playVideoAt(currentIdx);}catch(_){}
-  } else {togglePlay();}
+  } else {
+    // Now Playing 화면에서는 짧게 터치 시 셔플 토글
+    toggleShuffle();
+  }
 }
 function onMenu(){ if(navigator.vibrate)navigator.vibrate(6); showView(appState==='nowplaying'?'tracklist':'nowplaying'); }
 function onPrev(){ if(navigator.vibrate)navigator.vibrate(6); appState==='nowplaying'?prevTrack():spinCarousel(-1); }
@@ -1633,12 +1650,16 @@ window.onYouTubeIframeAPIReady = () => {
 function onYTState(e) {
   const S = YT.PlayerState;
 
-  // 1. 목록 로드 완료 시 (최초 1회 설정)
   if (e.data === S.CUED) {
     const playlist = ytPlayer.getPlaylist();
     if (playlist && playlist.length > 0) {
+      // 1. 전체 셔플 모드는 꺼진 상태로 유지 (isShuffle = false)
+      ytPlayer.setShuffle(false); 
+      
+      // 2. 첫 곡만 랜덤으로 인덱스 선택
       const randIdx = Math.floor(Math.random() * playlist.length);
-      ytPlayer.setShuffle(true); 
+      
+      // 3. 선택된 곡부터 재생 (이후로는 리스트 순서대로 재생됨)
       setTimeout(() => {
         ytPlayer.playVideoAt(randIdx);
       }, 200);
