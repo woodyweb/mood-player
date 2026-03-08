@@ -1393,7 +1393,14 @@ function updateNPArt(idx){
   const wheelEl = document.getElementById('wheelShell');
   let lastAngle = null;
   let accumDeg  = 0;
-  const THRESHOLD = 18; // degrees per tick
+  const THRESHOLD = 12; // degrees per tick
+
+  function getAngle(x, y){
+    const r  = wheelEl.getBoundingClientRect();
+    const cx = r.left + r.width/2;
+    const cy = r.top  + r.height/2;
+    return Math.atan2(y-cy, x-cx) * 180 / Math.PI;
+  }
 
   function getAngle(x, y){
     const r  = wheelEl.getBoundingClientRect();
@@ -1405,29 +1412,37 @@ function updateNPArt(idx){
   function onStart(x, y){
     lastAngle  = getAngle(x, y);
     accumDeg   = 0;
-    wheelDragged = false;
+    wheelDragged = false; // 시작 시 초기화
   }
 
   function onMove(x, y){
     if(lastAngle === null) return;
     let diff = getAngle(x, y) - lastAngle;
-    // wrap -180..180
     if(diff >  180) diff -= 360;
     if(diff < -180) diff += 360;
+    
+    // ★ 핵심 수정: 아주 미세한 움직임(2도 이상)만 있어도 클릭 방지 가드를 세웁니다.
+    if(Math.abs(diff) > 2) {
+      wheelDragged = true;
+    }
+
     accumDeg += diff;
     lastAngle = getAngle(x, y);
+
     if(Math.abs(accumDeg) >= THRESHOLD){
       const dir = accumDeg > 0 ? 1 : -1;
       onWheelTurn(dir);
       accumDeg = 0;
-      wheelDragged = true;
+      // 볼륨이 조절되었다면 확실히 클릭을 막음
+      wheelDragged = true; 
     }
-  }
 
   function onEnd(x, y){
-    if(!wheelDragged) fireZone(x, y);
+    // ★ 드래그 가드가 세워지지 않았을 때만 버튼 기능을 실행합니다.
+    if(!wheelDragged) {
+      fireZone(x, y);
+    }
     lastAngle  = null;
-    wheelDragged = false;
   }
 
   // Mouse
