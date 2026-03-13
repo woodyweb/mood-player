@@ -1509,20 +1509,78 @@ function applyTheme(theme){
   document.querySelector('.lcd-wrap').dataset.theme = theme;
 }
 
+// About 항목 정의
+const ABOUT_ITEMS = [
+  { label: '🌐 Website',  action: 'url',  value: 'https://sites.google.com/view/wooseoksuh/about' },
+  { label: '💼 LinkedIn', action: 'url',  value: 'https://linkedin.com/in/wooseok-suh-woody' },
+  { label: '📧 Email',    action: 'copy', value: 'wooseok.woody@gmail.com' },
+];
+let aboutSelIdx = 0;
+
+function renderAbout(){
+  const list = document.getElementById('aboutContent');
+  list.innerHTML = '';
+  // 이름/타이틀 헤더
+  const header = document.createElement('div');
+  header.style.cssText = 'padding:8px 10px 6px;border-bottom:1px solid rgba(0,0,0,.1);';
+  header.innerHTML = `
+    <div style="font-size:11px;font-weight:bold;color:#111;">Wooseok Suh</div>
+    <div style="font-size:9.5px;font-weight:300;color:#777;margin-top:1px;">Product Designer/Engineer</div>
+  `;
+  list.appendChild(header);
+  // 선택 가능한 항목들
+  ABOUT_ITEMS.forEach((item, i) => {
+    const li = document.createElement('div');
+    li.style.cssText = `display:flex;align-items:center;justify-content:space-between;padding:0 8px;height:22px;font-size:11px;font-weight:500;border-bottom:1px solid rgba(0,0,0,.07);cursor:pointer;`;
+    if(i === aboutSelIdx){
+      li.style.background = 'linear-gradient(180deg,#4fa3f5 0%,#1666d0 100%)';
+      li.style.color = '#fff';
+    } else {
+      li.style.color = '#111';
+    }
+    const hint = item.action === 'copy'
+      ? '<span style="font-size:9px;opacity:.6">tap to copy</span>'
+      : '<span style="font-size:9px;opacity:.6">tap to open</span>';
+    li.innerHTML = `<span>${item.label}</span>${hint}`;
+    li.id = 'about-item-' + i;
+    li.addEventListener('click', () => { aboutSelIdx = i; aboutSelect(); });
+    list.appendChild(li);
+  });
+}
+
+function aboutSelect(){
+  const item = ABOUT_ITEMS[aboutSelIdx];
+  if(!item) return;
+  if(item.action === 'url'){
+    window.open(item.value, '_blank');
+  } else if(item.action === 'copy'){
+    navigator.clipboard.writeText(item.value).then(() => {
+      const target = document.getElementById('about-item-' + aboutSelIdx);
+      if(target){
+        const origBg    = target.style.background;
+        const origColor = target.style.color;
+        target.innerHTML = `<span>📧 Email</span><span style="font-size:9px;color:#4caf50;font-weight:bold;">Copied!</span>`;
+        setTimeout(() => {
+          target.innerHTML = `<span>📧 Email</span><span style="font-size:9px;opacity:.6">tap to copy</span>`;
+          target.style.background = origBg;
+          target.style.color = origColor;
+        }, 1500);
+      }
+    }).catch(() => {
+      prompt('이메일 주소:', item.value);
+    });
+  }
+  if(navigator.vibrate) navigator.vibrate([8,25,8]);
+}
+
 function showAbout(){
   appState = 'about';
+  aboutSelIdx = 0;
   document.querySelectorAll('.lcd-view').forEach(v=>v.classList.add('hidden'));
   document.getElementById('view-about').classList.remove('hidden');
   document.getElementById('hTitle').textContent = 'About';
   document.getElementById('hRight').textContent = '▶';
-  document.getElementById('aboutContent').innerHTML = `
-    <b>Wooseok Suh</b><br>
-    Product Designer/Engineer<br>
-    <br>
-    🌐 sites.google.com/view/wooseoksuh/about<br>
-    💼 linkedin.com/in/wooseok-suh-woody<br>
-    📧 wooseok.woody@gmail.com
-  `;
+  renderAbout();
 }
 
 function showView(name){
@@ -1817,7 +1875,7 @@ function onCenter(){
   if(appState==='menu'){
     menuSelect();
   } else if(appState==='about'){
-    menuBack();
+    aboutSelect();
   } else if(appState==='tracklist'){
     currentIdx=trackIdx;
     updateNPArt(currentIdx);
@@ -1915,25 +1973,22 @@ function onYTState(e) {
 
       // 저장된 재생 상태 복원 시도
       const savedIdx  = parseInt(localStorage.getItem('rpod_track') || '-1');
-      const savedTime = parseFloat(localStorage.getItem('rpod_time')  || '0');
+      const savedTime = parseFloat(localStorage.getItem('rpod_time') || '0');
       const savedAge  = parseInt(localStorage.getItem('rpod_saved_at') || '0');
       const ageMs     = Date.now() - savedAge;
-
-      // 저장된 곡이 유효하고 30분 이내면 복원, 아니면 랜덤 시작
       const validSave = savedIdx >= 0 && savedIdx < playlist.length && ageMs < 30 * 60 * 1000;
 
       setTimeout(() => {
         if (validSave) {
           ytPlayer.playVideoAt(savedIdx);
-          // seekTo는 PLAYING 상태가 된 후 실행해야 함
+          // seekTo는 PLAYING 상태 후 실행
           if (savedTime > 5) {
             const seekOnce = setInterval(() => {
-              if (ytPlayer.getPlayerState() === S.PLAYING) {
+              if (ytPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
                 ytPlayer.seekTo(savedTime, true);
                 clearInterval(seekOnce);
               }
             }, 300);
-            // 5초 후 포기
             setTimeout(() => clearInterval(seekOnce), 5000);
           }
         } else {
@@ -2079,11 +2134,11 @@ function updateProg(){
     document.getElementById('npCur').textContent=fmt(cur);
     document.getElementById('npRem').textContent=dur>0?'-'+fmt(dur-cur):'-0:00';
     document.getElementById('progFill').style.width=dur>0?(cur/dur*100)+'%':'0%';
-    // 재생 상태 저장 (0.8초마다 호출됨)
+    // 재생 상태 저장
     const idx = ytPlayer.getPlaylistIndex();
     if(idx >= 0 && cur > 0){
-      localStorage.setItem('rpod_track',   idx);
-      localStorage.setItem('rpod_time',    Math.floor(cur));
+      localStorage.setItem('rpod_track',    idx);
+      localStorage.setItem('rpod_time',     Math.floor(cur));
       localStorage.setItem('rpod_saved_at', Date.now());
     }
   }catch(_){}
@@ -2111,7 +2166,6 @@ async function requestWakeLock() {
     }
   } catch(_) {}
 }
-// 화면이 다시 켜지면 재취득
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') requestWakeLock();
 });
